@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="210" viewBox="0 0 880 210" role="img" aria-label="Faleel H, Java Developer">
+  <!--
+    Self-hosted animated header for README.md.
+
+    Why SMIL and not CSS: GitHub sanitises README.md and drops <style> and <script>, so
+    keyframes and @property are not options. SMIL (<animate>, <animateTransform>) runs
+    inside an SVG referenced by <img>, which does render, and it needs no external asset,
+    no third-party typing-SVG service, and no network call.
+
+    Design rule followed: the gradient is reserved for the name and the rule, never the
+    whole block, and every animation ends in a frame that still looks correct on its own
+    (fill="freeze") so a static render is never broken.
+  -->
+  <defs>
+    <!-- Sweeps left to right across the name, then repeats. -->
+    <linearGradient id="sweep" gradientUnits="userSpaceOnUse" x1="-320" y1="0" x2="-20" y2="0">
+      <stop offset="0"   stop-color="#6D28D9"/>
+      <stop offset="0.5" stop-color="#7C3AED"/>
+      <stop offset="1"   stop-color="#C85A45"/>
+      <animate attributeName="x1" from="-320" to="880" dur="7s" repeatCount="indefinite"/>
+      <animate attributeName="x2" from="-20"  to="1180" dur="7s" repeatCount="indefinite"/>
+    </linearGradient>
+
+    <!-- Clip that opens left to right to produce the typing reveal on the subtitle. -->
+    <clipPath id="typeSub" clipPathUnits="userSpaceOnUse">
+      <rect x="0" y="0" height="44" width="0">
+        <animate attributeName="width" from="0" to="470" dur="1.7s" begin="0.9s" fill="freeze"/>
+      </rect>
+    </clipPath>
+  </defs>
+
+  <!-- Name: rises and fades in once, then carries the sweeping gradient. -->
+  <g transform="translate(0 14)" opacity="0">
+    <animateTransform attributeName="transform" type="translate" from="0 14" to="0 0"
+                      dur="0.7s" begin="0.15s" fill="freeze"/>
+    <animate attributeName="opacity" from="0" to="1" dur="0.7s" begin="0.15s" fill="freeze"/>
+    <text x="40" y="92" font-size="66" font-weight="700" fill="url(#sweep)"
+          font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">Faleel H</text>
+  </g>
+
+  <!-- Subtitle: types itself in. textLength pins the advance width so the clip lands
+       exactly on the last glyph no matter which fallback font the viewer ends up using. -->
+  <text x="40" y="136" font-size="20" fill="#7d8590"
+        font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace"
+        textLength="470" lengthAdjust="spacingAndGlyphs"
+        clip-path="url(#typeSub)">Java Developer  ·  Spring Boot  ·  MySQL</text>
+
+  <!-- Blinking block cursor, only after the subtitle has finished typing. -->
+  <rect x="522" y="117" width="11" height="22" rx="2" fill="#7C3AED" opacity="0">
+    <set attributeName="opacity" to="1" begin="2.6s"/>
+    <animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.5;0.5;1"
+             dur="1.2s" begin="2.6s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- Rule under the block: draws itself open, then holds. -->
+  <rect x="40" y="168" width="0" height="2" rx="1" fill="url(#sweep)">
+    <animate attributeName="width" from="0" to="800" dur="1s" begin="2.4s" fill="freeze"/>
+  </rect>
+</svg>
