@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<!-- 01 / FOUNDATION — philosophy card on the left, 2x2 statistics grid on the right. -->
+
+<section th:fragment="about" class="section section--warm section--about" id="about" aria-labelledby="about-title">
+
+  <div class="container">
+
+    <header class="section__head">
+      <p class="section__label">
+        <span class="section__tick" aria-hidden="true"></span>
+        01 / Foundation
+      </p>
+      <h2 class="section__title" id="about-title">About My Work</h2>
+      <p class="section__subtitle">
+        Building practical Java applications with a focus on backend development, AI integration,
+        and reliable web experiences.
+      </p>
+    </header>
+
+    <div class="about__grid">
+
+      <article class="card philosophy">
+        <p class="card__eyebrow">Development Approach</p>
+
+        <p class="philosophy__statement">
+          I focus on building practical applications with clean backend architecture, database
+          integration, and useful AI capabilities.
+        </p>
+
+        <p class="philosophy__body">
+          My background is in Computer Applications, with hands-on experience developing web
+          applications using Java, Spring Boot, Spring AI, MySQL, REST APIs, and modern frontend
+          technologies. My academic project, <strong>RAG Application Enterprise</strong>, involved
+          PDF document processing, embedding generation, vector-based semantic search, and
+          AI-powered question answering using Gemini.
+        </p>
+
+        <hr class="rule">
+
+        <dl class="info-columns">
+          <div class="info-column" th:each="column : ${infoColumns}">
+            <dt>
+              <span class="info-column__icon" th:insert="~{fragments/icon :: icon(${column.icon}, 15)}"></span>
+              <span class="info-column__label" th:text="${column.label}">Backend</span>
+            </dt>
+            <dd>
+              <span class="info-column__primary" th:text="${column.primary}">Java · Spring Boot · Spring Data JPA</span>
+              <span class="info-column__secondary" th:text="${column.secondary}">REST APIs · WebSocket</span>
+            </dd>
+          </div>
+        </dl>
+      </article>
+
+      <div class="stats">
+        <article class="card stat" th:each="stat : ${stats}">
+          <p class="stat__value">
+            <span th:text="${stat.value}">7.58</span><span class="stat__unit" th:text="${stat.unit}">/10</span>
+          </p>
+          <h3 class="stat__label" th:text="${stat.label}">CGPA</h3>
+          <p class="stat__note" th:text="${stat.note}">BCA — Bharath College of Science &amp; Management.</p>
+        </article>
+      </div>
+
+    </div>
+
+    <div class="education">
+      <article class="card education__card">
+        <span class="icon-box" th:insert="~{fragments/icon :: icon('cap', 17)}"></span>
+        <div>
+          <h3 class="education__title">BCA — Bachelor of Computer Application</h3>
+          <p class="education__school">Bharath College of Science and Management, Thanjavur, Tamil Nadu</p>
+        </div>
+      </article>
+
+      <article class="card education__card">
+        <span class="icon-box" th:insert="~{fragments/icon :: icon('target', 17)}"></span>
+        <div>
+          <h3 class="education__title">Focus Areas</h3>
+          <p class="education__school">OOP · DBMS · Web Development · AI/ML Fundamentals · Software Engineering</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  04 / DIALOGUE — Direct Contact card (338px) + Contact form card (484px), 24px gap.
+
+  The form is progressively enhanced: it has a real action/method, so a plain POST works with
+  JavaScript disabled. htmx intercepts the submit and swaps a small fragment in its place.
+-->
+
+<section th:fragment="contact" class="section section--white section--contact" id="contact" aria-labelledby="contact-title">
+
+  <div class="container">
+
+    <header class="section__head">
+      <p class="section__label">
+        <span class="section__tick" aria-hidden="true"></span>
+        04 / Dialogue
+      </p>
+      <h2 class="section__title" id="contact-title">Let's Connect</h2>
+      <p class="section__subtitle">
+        Interested in Java development, backend applications, AI-powered projects, or simply want
+        to get in touch? Feel free to reach out.
+      </p>
+    </header>
+
+    <div class="contact__grid">
+
+      <!-- ── Left: direct channels ─────────────────────────────────────── -->
+      <aside class="card channel-card" aria-labelledby="direct-title">
+        <h3 class="channel-card__title" id="direct-title">Direct Contact</h3>
+        <p class="channel-card__lede">
+          I'm currently looking for entry-level Java Developer opportunities and opportunities to
+          contribute to backend and enterprise application development.
+        </p>
+
+        <ul class="channels">
+          <li class="channel" th:each="channel : ${channels}">
+            <span class="channel__icon" th:classappend="'channel__icon--' + ${channel.tone}">
+              <span th:insert="~{fragments/icon :: icon(${channel.icon}, 15)}"></span>
+            </span>
+            <span class="channel__body">
+              <span class="channel__label" th:text="${channel.label}">Email</span>
+              <!-- mailto: stays in place; http(s): opens in a new tab. -->
+              <a class="channel__value" th:if="${channel.href != null}"
+                 th:href="${channel.href}" th:text="${channel.value}"
+                 th:attr="target=${#strings.startsWith(channel.href, 'http')} ? '_blank' : null,rel=${#strings.startsWith(channel.href, 'http')} ? 'noopener' : null"></a>
+              <span class="channel__value" th:unless="${channel.href != null}"
+                    th:text="${channel.value}"></span>
+            </span>
+          </li>
+        </ul>
+
+        <button class="copy-btn" type="button"
+                th:attr="data-copy=${ownerEmail},aria-label='Copy ' + ${ownerEmail} + ' to the clipboard'">
+          <span th:insert="~{fragments/icon :: icon('copy', 11)}"></span>
+          Copy email address
+        </button>
+      </aside>
+
+      <!-- ── Right: the form ────────────────────────────────────────────── -->
+      <div class="card form-card">
+        <!--
+          th:hx-post takes a URL expression; the remaining htmx attributes are CSS-selector
+          strings, so they have to go through th:attr — a bare th:hx-target="#id" would make
+          Thymeleaf try to parse "#id" as an expression.
+        -->
+        <form class="form"
+              th:object="${contactForm}"
+              th:action="@{/contact}"
+              method="post"
+              th:attr="hx-post=@{/contact},hx-target='#contact-result',hx-swap='outerHTML',hx-indicator='#contact-status',hx-disabled-elt='find .btn--send'">
+
+          <div class="form__row">
+            <div class="field">
+              <label class="field__label" for="name">Full Name <span class="field__req" aria-hidden="true">*</span></label>
+              <input class="field__control" type="text"
+                     th:field="*{name}"
+                     placeholder="Your name"
+                     autocomplete="name"
+                     aria-describedby="err-name"
+                     required>
+              <p class="field__error" id="err-name"
+                 th:classappend="${contactFieldErrors['name'] == null ? '' : 'is-error'}"
+                 th:text="${contactFieldErrors['name']}"></p>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="email">Email Address <span class="field__req" aria-hidden="true">*</span></label>
+              <input class="field__control" type="email"
+                     th:field="*{email}"
+                     placeholder="you@example.com"
+                     autocomplete="email"
+                     aria-describedby="err-email"
+                     required>
+              <p class="field__error" id="err-email"
+                 th:classappend="${contactFieldErrors['email'] == null ? '' : 'is-error'}"
+                 th:text="${contactFieldErrors['email']}"></p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="topic">Subject</label>
+            <span class="field__select">
+              <select class="field__control" th:field="*{topic}" aria-describedby="err-topic">
+                <option value="">Select a topic…</option>
+                <option th:each="option : ${topics}"
+                        th:value="${option.value}"
+                        th:text="${option.label}"></option>
+              </select>
+              <span class="field__chevron" th:insert="~{fragments/icon :: icon('chevron-down', 15)}"></span>
+            </span>
+            <p class="field__error" id="err-topic"
+               th:classappend="${contactFieldErrors['topic'] == null ? '' : 'is-error'}"
+               th:text="${contactFieldErrors['topic']}"></p>
+          </div>
+
+          <div class="field">
+            <label class="field__label" for="message">Message <span class="field__req" aria-hidden="true">*</span></label>
+            <textarea class="field__control field__control--area"
+                      th:field="*{message}"
+                      rows="4"
+                      placeholder="Tell me a little about your message or opportunity."
+                      aria-describedby="err-message"
+                      required></textarea>
+            <p class="field__error" id="err-message"
+               th:classappend="${contactFieldErrors['message'] == null ? '' : 'is-error'}"
+               th:text="${contactFieldErrors['message']}"></p>
+          </div>
+
+          <!-- Honeypot: offscreen, skipped by the keyboard, filled in by bots. -->
+          <p class="hp">
+            <label for="website">Leave this field empty</label>
+            <input type="text" id="website" th:field="*{website}" tabindex="-1" autocomplete="off">
+          </p>
+
+          <div class="form__foot">
+            <button class="btn btn--gradient btn--send" type="submit">
+              <span>Send Message</span>
+              <span th:insert="~{fragments/icon :: icon('send', 15)}"></span>
+            </button>
+            <span class="form__status" id="contact-status" aria-hidden="true">Sending…</span>
+          </div>
+
+        </form>
+
+        <!-- Server-rendered result (also the htmx swap target). -->
+        <div th:replace="~{fragments/contact-result :: alert(${contactState}, ${contactDelivery}, ${contactErrors})}"></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+</html>

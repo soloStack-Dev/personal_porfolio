@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<!-- Footer: FH mark + name | nav | copyright, with a circular back-to-top at the far right. -->
+
+<footer th:fragment="siteFooter" class="site-footer">
+  <div class="container site-footer__inner">
+
+    <p class="site-footer__brand">
+      <span class="brand__mark brand__mark--sm" aria-hidden="true">FH</span>
+      <span class="site-footer__name" th:text="${ownerName}">Faleel H</span>
+    </p>
+
+    <nav class="site-footer__nav" aria-label="Footer">
+      <a href="#top">Home</a>
+      <a href="#about">About</a>
+      <a href="#skills">Skills</a>
+      <a href="#projects">Projects</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <p class="site-footer__copy">&copy; <span th:text="${currentYear}">2026</span> <span th:text="${ownerName}">Faleel H</span>. All rights reserved.</p>
+
+    <button class="to-top" type="button" data-to-top aria-label="Back to top">
+      <span th:insert="~{fragments/icon :: icon('arrow-up', 13)}"></span>
+    </button>
+
+  </div>
+</footer>
+
+</html>

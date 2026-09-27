@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  Result region for the 04 / DIALOGUE form. Two entry points, one markup:
+
+    alert(state, delivery, errors)   -> rendered server-side on GET (Post/Redirect/Get)
+    outcome(state, delivery, errors) -> returned to htmx, and additionally out-of-band swaps
+                                        the four per-field error slots
+
+  Keeping the alert markup in a single fragment is what makes the JS and no-JS paths look
+  identical.
+
+  Style switch is a single-word modifier class (is-success / is-error) rather than a
+  multi-word class list: Thymeleaf tokenises expression values on whitespace, so a string
+  literal like 'form-result--success form-result' inside ${...} does not parse.
+-->
+
+<div th:fragment="alert(state, delivery, errors)"
+     id="contact-result"
+     class="form-result"
+     th:classappend="${state == 'success' ? 'is-success' : (state == 'error' ? 'is-error' : 'is-idle')}"
+     th:hidden="${state == null}"
+     th:role="${state == 'error' ? 'alert' : 'status'}"
+     th:aria-live="${state == 'error' ? 'assertive' : 'polite'}">
+
+  <span class="form-result__icon"
+        th:insert="~{fragments/icon :: icon(${state == 'success' ? 'check' : 'alert'}, 15)}"></span>
+
+  <div class="form-result__body">
+    <p class="form-result__title"
+       th:text="${state == 'success' ? 'Message sent.' : 'That needs a second look.'}">Message sent.</p>
+
+    <p class="form-result__detail" th:if="${delivery != null and delivery.detail != null}"
+       th:text="${delivery.detail}"></p>
+
+    <ul class="form-result__list" th:if="${errors != null and !errors.allErrors.isEmpty()}">
+      <li th:each="message : ${errors.allErrors}" th:text="${message.defaultMessage}"></li>
+    </ul>
+  </div>
+</div>
+
+<!-- Full htmx response: the alert plus out-of-band field errors. Empty slots clear stale text. -->
+<div th:fragment="outcome(state, delivery, errors)">
+
+  <div th:replace="~{fragments/contact-result :: alert(${state}, ${delivery}, ${errors})}"></div>
+
+  <div th:remove="tag">
+    <p class="field__error" id="err-name" hx-swap-oob="true"
+       th:with="msg=${errors != null and errors.hasFieldErrors('name') ? errors.getFieldError('name').defaultMessage : ''}"
+       th:classappend="${msg == '' ? '' : 'is-error'}"
+       th:text="${msg}"></p>
+    <p class="field__error" id="err-email" hx-swap-oob="true"
+       th:with="msg=${errors != null and errors.hasFieldErrors('email') ? errors.getFieldError('email').defaultMessage : ''}"
+       th:classappend="${msg == '' ? '' : 'is-error'}"
+       th:text="${msg}"></p>
+    <p class="field__error" id="err-topic" hx-swap-oob="true"
+       th:with="msg=${errors != null and errors.hasFieldErrors('topic') ? errors.getFieldError('topic').defaultMessage : ''}"
+       th:classappend="${msg == '' ? '' : 'is-error'}"
+       th:text="${msg}"></p>
+    <p class="field__error" id="err-message" hx-swap-oob="true"
+       th:with="msg=${errors != null and errors.hasFieldErrors('message') ? errors.getFieldError('message').defaultMessage : ''}"
+       th:classappend="${msg == '' ? '' : 'is-error'}"
+       th:text="${msg}"></p>
+  </div>
+
+</div>
+
+</html>

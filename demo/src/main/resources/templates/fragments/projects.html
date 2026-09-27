@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  03 / PORTFOLIO — heading + category filter on one row, then a 2x2 card grid.
+  Filtering is client-side (see static/js/site.js) and degrades to "all cards visible" without JS.
+-->
+
+<section th:fragment="projects" class="section section--warm" id="projects" aria-labelledby="projects-title">
+
+  <div class="container">
+
+    <header class="section__head section__head--split">
+      <div>
+        <p class="section__label">
+          <span class="section__tick" aria-hidden="true"></span>
+          03 / Portfolio
+        </p>
+        <h2 class="section__title" id="projects-title">Featured Projects</h2>
+        <p class="section__subtitle">
+          Practical applications built with Java, Spring Boot, database integration, HTMX, and AI technologies.
+        </p>
+      </div>
+
+      <div class="filter" role="group" aria-label="Filter projects by category">
+        <button class="filter__pill is-active" type="button"
+                th:each="option : ${filters}"
+                th:attr="data-filter=${option.id}, aria-pressed=${option.id == 'all'}">
+          <span th:text="${option.label}">All</span>
+        </button>
+      </div>
+    </header>
+
+    <p class="filter__status" data-filter-status role="status" aria-live="polite"></p>
+
+    <ul class="projects" data-project-grid>
+      <li class="card project" th:each="project : ${projects}"
+          th:attr="data-filters=${#strings.listJoin(project.filters, ' ')}">
+
+        <p class="project__meta">
+          <span class="chip" th:text="${project.category}">Cloud / Infra</span>
+          <span class="status" th:classappend="'status--' + ${project.statusTone}">
+            <span class="status__dot" aria-hidden="true"></span>
+            <span th:text="${project.status}">Live V3</span>
+          </span>
+        </p>
+
+        <h3 class="project__title" th:text="${project.title}">RAG Application Enterprise</h3>
+        <p class="project__description" th:text="${project.description}"></p>
+
+        <ul class="tags tags--sm">
+          <li class="tag" th:each="tag : ${project.tags}" th:text="${tag}">Java 21</li>
+        </ul>
+
+        <p class="project__features-label" th:id="'features-' + ${project.id}">Key Features</p>
+        <ul class="project__features" th:attr="aria-labelledby='features-' + ${project.id}">
+          <li th:each="feature : ${project.features}" th:text="${feature}">PDF document upload and processing</li>
+        </ul>
+
+        <hr class="rule rule--tight">
+
+        <ul class="project__links">
+          <li th:each="link : ${project.links}">
+            <!-- Real URL: a plain anchor. No URL yet: a button that explains itself. -->
+            <a class="project-link" th:if="${link.href != null}"
+               th:classappend="'project-link--' + ${link.tone}"
+               th:href="${link.href}" th:text="${link.label}"
+               target="_blank" rel="noopener noreferrer">Source Repository</a>
+            <button class="project-link" type="button" th:unless="${link.href != null}"
+                    th:classappend="'project-link--' + ${link.tone}"
+                    th:attr="data-placeholder-link=${link.label}"
+                    th:text="${link.label}">Source Repository</button>
+            <span class="project-link__icon"
+                  th:insert="~{fragments/icon :: icon(${link.icon}, 12)}"></span>
+          </li>
+        </ul>
+
+      </li>
+    </ul>
+
+  </div>
+</section>
+
+</html>

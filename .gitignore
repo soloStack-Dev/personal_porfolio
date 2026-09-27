@@ -1,0 +1,22 @@
+# Root-level ignores. Per-project rules live in demo/.gitignore
+# (target/, .env, IDE folders for the Maven project itself).
+
+# OS junk
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE / editor state that can appear at the top level
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.settings/
+.classpath
+.project
+
+# Local logs and scratch output
+*.log
+*.tmp

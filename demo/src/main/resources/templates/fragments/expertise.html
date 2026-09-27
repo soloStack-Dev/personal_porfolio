@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  02 / CAPABILITIES — five cards on an 18px-gap grid.
+  "Core Concepts" is flagged wide in PortfolioService and spans two columns on desktop,
+  collapsing to a single column on mobile.
+-->
+
+<section th:fragment="expertise" class="section section--white section--expertise" id="skills" aria-labelledby="skills-title">
+
+  <div class="container">
+
+    <header class="section__head">
+      <p class="section__label">
+        <span class="section__tick" aria-hidden="true"></span>
+        02 / Capabilities
+      </p>
+      <h2 class="section__title" id="skills-title">Technical Skills</h2>
+      <p class="section__subtitle">
+        A practical technology stack focused on Java backend development, web applications,
+        databases, AI integration, and application testing.
+      </p>
+    </header>
+
+    <ul class="expertise__grid">
+      <li class="card expertise-card"
+          th:each="card : ${expertise}"
+          th:classappend="${card.wide} ? 'expertise-card--wide'">
+        <span class="icon-box" th:insert="~{fragments/icon :: icon(${card.icon}, 17)}"></span>
+        <h3 class="expertise-card__title" th:text="${card.title}">Core Languages</h3>
+        <p class="expertise-card__description" th:text="${card.description}"></p>
+        <ul class="tags">
+          <li class="tag" th:each="tag : ${card.tags}" th:text="${tag}">TypeScript</li>
+        </ul>
+      </li>
+    </ul>
+
+  </div>
+</section>
+
+</html>

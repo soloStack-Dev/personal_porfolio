@@ -1,0 +1,16 @@
+# Build context exclusions. Without this, every local `target/` and `.git/` is uploaded to
+# the daemon on each build and busts the layer cache.
+target/
+.mvn/wrapper/maven-wrapper.jar
+.git/
+.gitignore
+.gitattributes
+.idea/
+.vscode/
+*.iml
+*.log
+HELP.md
+Dockerfile
+docker-compose.yml
+.dockerignore
+README.md

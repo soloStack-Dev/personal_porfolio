@@ -1,0 +1,40 @@
+# Portfolio site. Single service — the app is stateless, so there is no database here.
+# The two projects it describes use MySQL; this site only displays them.
+#
+#   docker compose up --build     build + run
+#   docker compose logs -f        follow logs (contact-form submissions are logged here
+#                                 whenever no SMTP host is configured)
+#   docker compose ps             health status
+#   docker compose down           stop and remove the container
+#
+# The image's own HEALTHCHECK drives the health column, so it is not repeated here.
+
+services:
+  portfolio:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: portfolio-demo:latest
+    container_name: portfolio-demo
+    ports:
+      # ${PORT:-8080}:8080  — override with PORT=9090 docker compose up
+      - "${PORT:-8080}:8080"
+    env_file:
+      # SMTP settings live in `.env` and are passed through only if that file exists.
+      # Do NOT list them under `environment:` with empty or `true` defaults: an empty
+      # spring.mail.host is still "present" to Spring Boot, which is enough to construct a
+      # JavaMailSender and defeat the no-config fallback where ContactMailService logs the
+      # enquiry instead of sending it. Absent is the only safe unset value here.
+      - path: .env
+        required: false
+    environment:
+      APP_CONTACT_TO: "${APP_CONTACT_TO:-faleelmr4@gmail.com}"
+      APP_CONTACT_FROM: "${APP_CONTACT_FROM:-portfolio@localhost}"
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          # MaxRAMPercentage=75 in the image sizes the heap from this number.
+          memory: 512M
+        reservations:
+          memory: 256M

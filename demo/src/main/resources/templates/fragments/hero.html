@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  Hero: two columns.
+  LEFT  badge / eyebrow / headline / paragraph / CTA row / CONNECT row
+  RIGHT image card (320x320) with a status overlay that is real UI, not baked into the image.
+-->
+
+<section th:fragment="hero" class="hero" id="top" aria-labelledby="hero-title">
+  <div class="container hero__inner">
+
+    <div class="hero__copy">
+
+      <p class="badge">
+        <span class="badge__dot" aria-hidden="true"></span>
+        Available for entry-level Java Developer roles
+      </p>
+
+      <p class="eyebrow">Java Developer | BCA Graduate</p>
+
+      <h1 class="hero__title" id="hero-title">
+        Building practical
+        <span class="grad-text">web applications</span>
+        with Java &amp; Spring Boot.
+      </h1>
+
+      <p class="hero__lede">
+        BCA graduate with hands-on experience developing backend applications using Java, Spring Boot,
+        Spring AI, MySQL, REST APIs, and modern web technologies. Built an academic RAG application that
+        processes PDF documents, performs semantic search, and generates source-grounded responses using
+        Gemini.
+      </p>
+
+      <div class="hero__actions">
+        <a class="btn btn--gradient" href="#projects">
+          Explore Work
+          <span th:insert="~{fragments/icon :: icon('arrow-right', 15)}"></span>
+        </a>
+
+        <a class="btn btn--outline" href="#contact">Let's Talk</a>
+
+        <button class="link-action" type="button" data-placeholder-link="Résumé (PDF)">
+          <span th:insert="~{fragments/icon :: icon('cap', 15)}"></span>
+          Resume
+        </button>
+      </div>
+
+      <div class="connect">
+        <hr class="rule">
+        <p class="connect__label">Connect</p>
+        <ul class="connect__list">
+          <li>
+            <a class="icon-button" th:href="${ownerGithub}"
+               target="_blank" rel="noopener noreferrer"
+               aria-label="GitHub profile">
+              <span th:insert="~{fragments/icon :: icon('code', 15)}"></span>
+            </a>
+          </li>
+          <li>
+            <a class="icon-button" th:href="${ownerLinkedin}"
+               target="_blank" rel="noopener noreferrer"
+               aria-label="LinkedIn profile">
+              <span th:insert="~{fragments/icon :: icon('briefcase', 15)}"></span>
+            </a>
+          </li>
+          <li>
+            <a class="icon-button" th:href="@{'mailto/' + ${ownerEmail}}"
+               th:attr="aria-label='Email ' + ${ownerEmail}">
+              <span th:insert="~{fragments/icon :: icon('mail', 15)}"></span>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+
+    <figure class="hero__figure">
+      <div class="photo-card">
+        <!--
+          The photograph. The overlay below is deliberately a sibling of the <img>, never
+          painted into the asset: see Context/web_page_design_prompt_half.md.
+        -->
+        <img class="photo-card__img"
+             th:src="@{/img/faleelimg.jpeg}"
+             width="304" height="304"
+             decoding="async"
+             alt="Faleel H, Java developer and BCA graduate.">
+
+        <figcaption class="status-overlay">
+          <span class="status-overlay__where">
+            <span class="status-overlay__dot" aria-hidden="true"></span>
+            Thiruvarur, India / Remote
+          </span>
+          <span class="status-overlay__uptime">Open to Work</span>
+        </figcaption>
+      </div>
+    </figure>
+
+  </div>
+</section>
+
+</html>

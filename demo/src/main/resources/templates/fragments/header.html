@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  Sticky site header.
+  Desktop: FH mark + identity | centred pill nav | gradient "Get in touch" CTA
+  Mobile:  FH mark + identity | "Get in touch" | hamburger that opens a drawer
+-->
+
+<header th:fragment="siteHeader" class="site-header" id="site-header" data-site-header>
+  <div class="container site-header__inner">
+
+    <a class="brand" href="#top" th:attr="aria-label=${ownerName} + ' — back to top'">
+      <span class="brand__mark" aria-hidden="true">FH</span>
+      <span class="brand__text">
+        <span class="brand__name" th:text="${ownerName}">Faleel H</span>
+        <span class="brand__role" th:text="${ownerRole}">Java Developer</span>
+      </span>
+    </a>
+
+    <nav class="site-nav" id="site-nav" aria-label="Primary">
+      <ul class="site-nav__list" data-nav-list>
+        <li><a class="site-nav__link" href="#top" data-nav-link data-section="top">Home</a></li>
+        <li><a class="site-nav__link" href="#about" data-nav-link data-section="about">About</a></li>
+        <li><a class="site-nav__link" href="#skills" data-nav-link data-section="skills">Skills</a></li>
+        <li><a class="site-nav__link" href="#projects" data-nav-link data-section="projects">Projects</a></li>
+        <li><a class="site-nav__link" href="#contact" data-nav-link data-section="contact">Contact</a></li>
+      </ul>
+    </nav>
+
+    <div class="site-header__actions">
+      <a class="btn btn--gradient btn--sm" href="#contact">
+        Get in touch
+        <span th:insert="~{fragments/icon :: icon('arrow-right', 14)}"></span>
+      </a>
+
+      <button class="nav-toggle" type="button"
+              data-nav-toggle
+              aria-expanded="false" aria-controls="site-nav" aria-label="Open navigation menu">
+        <span class="nav-toggle__icon" th:insert="~{fragments/icon :: icon('menu', 20)}" data-nav-icon-open></span>
+        <span class="nav-toggle__icon is-hidden" th:insert="~{fragments/icon :: icon('close', 20)}" data-nav-icon-close></span>
+      </button>
+    </div>
+
+  </div>
+</header>
+
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Faleel H — Java Developer')}"></head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<div th:replace="~{fragments/header :: siteHeader}"></div>
+
+<main id="main">
+  <div th:replace="~{fragments/hero :: hero}"></div>
+  <div th:replace="~{fragments/about :: about}"></div>
+  <div th:replace="~{fragments/expertise :: expertise}"></div>
+  <div th:replace="~{fragments/projects :: projects}"></div>
+  <div th:replace="~{fragments/contact :: contact}"></div>
+</main>
+
+<div th:replace="~{fragments/footer :: siteFooter}"></div>
+
+<div th:replace="~{fragments/layout :: toast-host}"></div>
+<div th:replace="~{fragments/layout :: scripts}"></div>
+
+</body>
+</html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<!--
+  Inline icon set. No icon-font, no CDN, no bundler: a single parameterised fragment.
+
+    th:insert="~{fragments/icon :: icon('code', 18)}"
+
+  All glyphs are drawn on a 24x24 grid with stroke="currentColor" so they inherit colour
+  and currentColor-driven hover states from their container.
+
+  Use th:insert, never th:replace. th:replace swaps out the host element, so any class or
+  data-* you put on the calling <span> (an icon box, a state hook the JS queries) is thrown
+  away. th:insert keeps the wrapper and nests this <svg> inside it.
+-->
+
+<svg th:fragment="icon(name, size)"
+     th:width="${size}" th:height="${size}"
+     viewBox="0 0 24 24" fill="none" stroke="currentColor"
+     stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+     class="icon" aria-hidden="true" focusable="false">
+
+  <g th:if="${name == 'code'}">
+    <polyline points="16 18 22 12 16 6"></polyline>
+    <polyline points="8 6 2 12 8 18"></polyline>
+  </g>
+
+  <g th:if="${name == 'layout'}">
+    <rect x="2.5" y="4" width="19" height="16" rx="2.5"></rect>
+    <path d="M2.5 8.5h19"></path>
+    <path d="M6 6.2h.01"></path>
+    <path d="M8.6 6.2h.01"></path>
+  </g>
+
+  <g th:if="${name == 'cloud'}">
+    <path d="M17.5 19H7a5 5 0 1 1 1.2-9.88A6.5 6.5 0 0 1 20 11.4 3.8 3.8 0 0 1 17.5 19Z"></path>
+  </g>
+
+  <g th:if="${name == 'terminal'}">
+    <rect x="2.5" y="4" width="19" height="16" rx="2.5"></rect>
+    <polyline points="7 10 10 12.5 7 15"></polyline>
+    <path d="M12.5 15.5h4.5"></path>
+  </g>
+
+  <g th:if="${name == 'network'}">
+    <circle cx="12" cy="5" r="2.3"></circle>
+    <circle cx="5" cy="19" r="2.3"></circle>
+    <circle cx="19" cy="19" r="2.3"></circle>
+    <path d="M10.6 7 6.2 16.9"></path>
+    <path d="M13.4 7l4.4 9.9"></path>
+    <path d="M7.3 19h9.4"></path>
+  </g>
+
+  <g th:if="${name == 'cap'}">
+    <path d="M12 4 2.5 8.6 12 13.2l9.5-4.6L12 4Z"></path>
+    <path d="M6.5 10.8V16c0 1.2 2.5 2.3 5.5 2.3s5.5-1.1 5.5-2.3v-5.2"></path>
+  </g>
+
+  <g th:if="${name == 'target'}">
+    <circle cx="12" cy="12" r="8.2"></circle>
+    <circle cx="12" cy="12" r="3.4"></circle>
+    <path d="M12 1.6v3M12 19.4v3M1.6 12h3M19.4 12h3"></path>
+  </g>
+
+  <g th:if="${name == 'spark'}">
+    <path d="M12 3.2v3.4M12 17.4v3.4M3.2 12h3.4M17.4 12h3.4"></path>
+    <path d="M5.9 5.9 8.3 8.3M15.7 15.7l2.4 2.4M18.1 5.9l-2.4 2.4M8.3 15.7l-2.4 2.4"></path>
+  </g>
+
+  <g th:if="${name == 'mail'}">
+    <rect x="2.5" y="4.5" width="19" height="15" rx="2.5"></rect>
+    <path d="m3.5 7.2 8.5 6 8.5-6"></path>
+  </g>
+
+  <g th:if="${name == 'pin'}">
+    <path d="M20 10.2c0 5.4-8 11.6-8 11.6s-8-6.2-8-11.6a8 8 0 0 1 16 0Z"></path>
+    <circle cx="12" cy="10" r="2.6"></circle>
+  </g>
+
+  <g th:if="${name == 'calendar'}">
+    <rect x="3" y="5" width="18" height="16" rx="2.5"></rect>
+    <path d="M3 10h18"></path>
+    <path d="M8 3v4M16 3v4"></path>
+  </g>
+
+  <g th:if="${name == 'chevron-down'}">
+    <polyline points="6 9.5 12 15.5 18 9.5"></polyline>
+  </g>
+
+  <g th:if="${name == 'send'}">
+    <path d="M21 3 10.5 13.6"></path>
+    <path d="M21 3 14.2 21l-3.7-7.4L3 9.8 21 3Z"></path>
+  </g>
+
+  <g th:if="${name == 'arrow-right'}">
+    <path d="M4 12h14.5"></path>
+    <polyline points="13 6.5 18.5 12 13 17.5"></polyline>
+  </g>
+
+  <g th:if="${name == 'arrow-up'}">
+    <path d="M12 20V5"></path>
+    <polyline points="6 11 12 5 18 11"></polyline>
+  </g>
+
+  <g th:if="${name == 'external'}">
+    <path d="M14 4h6v6"></path>
+    <path d="M20 4 11.4 12.6"></path>
+    <path d="M18 14.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4.5"></path>
+  </g>
+
+  <g th:if="${name == 'book'}">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"></path>
+  </g>
+
+  <g th:if="${name == 'download'}">
+    <path d="M12 3.5v11.5"></path>
+    <polyline points="7.5 10.5 12 15 16.5 10.5"></polyline>
+    <path d="M4 17.5v1.8A1.7 1.7 0 0 0 5.7 21h12.6a1.7 1.7 0 0 0 1.7-1.7v-1.8"></path>
+  </g>
+
+  <g th:if="${name == 'key'}">
+    <circle cx="7.5" cy="15.5" r="3.8"></circle>
+    <path d="m10.3 12.8 8.4-8.4"></path>
+    <path d="m16.2 5.9 2.4 2.4"></path>
+    <path d="m13.8 8.3 2 2"></path>
+  </g>
+
+  <g th:if="${name == 'briefcase'}">
+    <rect x="3" y="7.5" width="18" height="12.5" rx="2.5"></rect>
+    <path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"></path>
+    <path d="M3 12.6h18"></path>
+  </g>
+
+  <g th:if="${name == 'menu'}">
+    <path d="M4 7h16M4 12h16M4 17h16"></path>
+  </g>
+
+  <g th:if="${name == 'close'}">
+    <path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"></path>
+  </g>
+
+  <g th:if="${name == 'check'}">
+    <polyline points="20 6.5 9.5 17 4 11.5"></polyline>
+  </g>
+
+  <g th:if="${name == 'alert'}">
+    <circle cx="12" cy="12" r="9"></circle>
+    <path d="M12 7.5v5.5"></path>
+    <path d="M12 16.4h.01"></path>
+  </g>
+
+  <g th:if="${name == 'copy'}">
+    <rect x="9" y="9" width="12" height="12" rx="2.5"></rect>
+    <path d="M15 5.5A2.5 2.5 0 0 0 12.5 3H6a2.5 2.5 0 0 0-2.5 2.5V13"></path>
+  </g>
+
+  <g th:if="${name == 'shield'}">
+    <path d="M12 3 5 5.8v5.4c0 4.3 3 8.2 7 9.4 4-1.2 7-5.1 7-9.4V5.8L12 3Z"></path>
+    <polyline points="9.2 12 11.4 14.2 15 10.4"></polyline>
+  </g>
+
+</svg>
+
+</html>
