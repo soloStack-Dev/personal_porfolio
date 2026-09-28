@@ -13,7 +13,7 @@ Use the wrapper, not a system `mvn`:
 
 ```powershell
 .\mvnw.cmd spring-boot:run      # dev server, http://localhost:8080 (devtools live-reloads on classpath change)
-.\mvnw.cmd test                 # 38 tests: PortfolioPageTests (24) + ContactMailFailurePageTests (3) + ContactMailConfigurationTests (10) + DemoApplicationTests (1)
+.\mvnw.cmd test                 # 42 tests: PortfolioPageTests (24) + ContactMailFailurePageTests (4) + ContactMailConfigurationTests (13) + DemoApplicationTests (1)
 .\mvnw.cmd test -Dtest=PortfolioPageTests
 .\mvnw.cmd package              # produces the runnable jar in target/
 ```
@@ -92,6 +92,30 @@ docker compose down
   since it means host, TLS, and the password all reached Google. `app.contact.from` must equal the
   authenticated address or an alias on it, or Gmail rejects the send with
   `550 The specified from address does not match a permitted sender`.
+- **A rejected credential gets a targeted log, not a stack trace.** `ContactMailService` walks the
+  cause chain for `AuthenticationFailedException` (Spring wraps it in `MailAuthenticationException`,
+  and the wrapping differs between `protocolConnect` and `doSend`) and logs the App Password remedy
+  instead of 100 lines of Tomcat plumbing. Only non-credential failures log the stack trace, so a
+  real outage is not misread as a bad password. The password itself is never logged, and the
+  visitor is told nothing about the infrastructure. Two tests pin the classifier in both directions
+  — a 550 or a connection timeout must not be reported as a credential problem, because that
+  sends the operator off regenerating a perfectly good App Password.
+- **`app.contact.from` defaults to a placeholder and a relay rejects it.** `portfolio@localhost`
+  is not a mailbox, so every send fails with `550 The specified from address does not match a
+  permitted sender` — and only *after* authentication succeeds, so fixing the password alone still
+  leaves nothing delivered. `ContactMailService` warns once when a relay is configured while the
+  placeholder is still in place. Do not set `app.contact.from` in the tracked
+  `application.properties`: it belongs beside the credentials, and declaring it in both files means
+  import precedence silently decides which one Gmail rejects.
+- **A null `contactFieldErrors` must never 500 the page.** The `04 / DIALOGUE` field error slots
+  index that map directly, and an unguarded `map['name']` throws
+  `SpelEvaluationException: EL1012E: Cannot index into a null value`, taking the whole portfolio
+  down over a contact-form render. Every access is guarded, and `and` short-circuits in SpEL so the
+  index is only reached when the map exists. This was hit for real: a submission that passed
+  validation but failed at the relay redirected, and the target page returned 500. The
+  Post/Redirect/Get follow-the-session flow is covered by
+  `theRedirectTargetRendersWhenTheFlashAttributesComeBack` — MockMvc gives each `perform()` a fresh
+  context, so a bare `get("/")` passes and only replaying the session reaches the failing state.
 
 **Host port 8080 is not available on this machine.** The other project's `meminfo-rag-app`
 container has host port 8080 *reserved but unbound* — it was started while the local

@@ -3,11 +3,13 @@ package com.example.demo.Service;
 import com.example.demo.Model.ContactDelivery;
 import com.example.demo.Model.ContactForm;
 import com.example.demo.Model.ContactProperties;
+import jakarta.mail.AuthenticationFailedException;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeBodyPart;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.mail.internet.MimeMultipart;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -34,6 +36,9 @@ public class ContactMailService {
     private final ObjectProvider<JavaMailSender> mailSenderProvider;
     private final ContactProperties properties;
 
+    /** Guards the sender-address warning so it appears once, not once per submission. */
+    private final AtomicBoolean senderAddressChecked = new AtomicBoolean();
+
     public ContactMailService(ObjectProvider<JavaMailSender> mailSenderProvider, ContactProperties properties) {
         this.mailSenderProvider = mailSenderProvider;
         this.properties = properties;
@@ -54,6 +59,8 @@ public class ContactMailService {
                     ContactDelivery.Status.LOGGED,
                     "No mail relay is configured yet, so this enquiry was recorded in the server log only.");
         }
+
+        warnOnceIfSenderAddressLooksUnconfigured();
 
         try {
             MimeMessage message = mailSender.createMimeMessage();
@@ -80,11 +87,51 @@ public class ContactMailService {
                     ContactDelivery.Status.SENT,
                     "Delivered to the mailbox behind " + maskLocalPart(form.getEmail()) + ".");
         } catch (MailException | MessagingException | IllegalArgumentException ex) {
-            LOG.error("[contact] delivery failed for {}", maskLocalPart(form.getEmail()), ex);
+            if (isAuthenticationFailure(ex)) {
+                // A rejected credential is a deployment fault, not a transient one: every
+                // submission fails identically until the password is replaced, and the raw stack
+                // trace buries the one line that matters. Gmail's code is explicit, so say what
+                // to do about it. The password is deliberately not logged, and the visitor is
+                // told nothing about the infrastructure.
+                LOG.error("""
+                        [contact] the relay REJECTED THE CREDENTIALS, so nothing was sent. This is \
+                        a configuration fault, not a transient one: every submission will fail \
+                        this way until the password is replaced. Nothing was sent to the relay, \
+                        so the enquiry is lost - ask the sender to email directly.
+                          Gmail replies 534-5.7.9 "Application-specific password required" when an \
+                        account password is used. Create an App Password instead: Google Account \
+                        -> Security -> 2-Step Verification -> App passwords -> Mail -> Generate. \
+                        It is 16 lowercase letters with no symbols. Put it in \
+                        application-secret.properties as spring.mail.password. No client id or \
+                        client secret is involved; those are OAuth2 credentials and are not used \
+                        when sending as yourself.""");
+            } else {
+                LOG.error("[contact] delivery failed for {}", maskLocalPart(form.getEmail()), ex);
+            }
             return new ContactDelivery(
                     ContactDelivery.Status.FAILED,
-                    "The mail relay rejected the message. Please email faleelmr4@gmail.com directly.");
+                    "The mail relay rejected the message. Please email " + properties.to() + " directly.");
         }
+    }
+
+    /**
+     * Whether the failure was a rejected username or password.
+     *
+     * <p>Checked by walking the cause chain because Spring wraps the Jakarta exception in
+     * {@link org.springframework.mail.MailAuthenticationException}, and the wrapping is not
+     * uniform: a failure during {@code protocolConnect} surfaces differently from one raised by
+     * {@code doSend}. Package-private and static so it can be asserted without a live relay.
+     */
+    static boolean isAuthenticationFailure(Throwable ex) {
+        for (Throwable current = ex; current != null; current = current.getCause()) {
+            if (current instanceof AuthenticationFailedException) {
+                return true;
+            }
+            if (current == current.getCause()) {
+                break;
+            }
+        }
+        return false;
     }
 
     private String plainText(ContactForm form) {
@@ -127,5 +174,29 @@ public class ContactMailService {
             return "your inbox";
         }
         return email.charAt(0) + "***" + email.substring(at);
+    }
+
+    /**
+     * Warns once if a relay is configured but the sender address is still the stock placeholder.
+     *
+     * <p>{@code app.contact.from} has to match the authenticated mailbox or be an alias on it, and
+     * a relay rejects the whole message with {@code 550 The specified from address does not match
+     * a permitted sender} otherwise - which happens after authentication succeeds, so fixing the
+     * password alone would still leave every send failing. The record's default is a placeholder,
+     * so forgetting the key is easy and the resulting error is not obviously about configuration.
+     * Logged once rather than per submission, since it never changes between requests.
+     */
+    private void warnOnceIfSenderAddressLooksUnconfigured() {
+        if (!senderAddressChecked.compareAndSet(false, true)) {
+            return;
+        }
+        if (ContactProperties.PLACEHOLDER_SENDER.equalsIgnoreCase(properties.from())) {
+            LOG.warn("""
+                    [contact] app.contact.from is still the placeholder "{}". A relay requires the \
+                    From address to match the authenticated mailbox or be an alias on it, so every \
+                    send will be rejected with 550 even once the password is fixed. Set it beside \
+                    the credentials in application-secret.properties.""",
+                    ContactProperties.PLACEHOLDER_SENDER);
+        }
     }
 }

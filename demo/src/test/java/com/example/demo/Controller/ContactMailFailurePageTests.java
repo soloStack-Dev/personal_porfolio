@@ -1,5 +1,6 @@
 package com.example.demo.Controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -55,6 +57,29 @@ class ContactMailFailurePageTests {
         mvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("id=\"contact-result\"")));
+    }
+
+    @Test
+    void theRedirectTargetRendersWhenTheFlashAttributesComeBack() throws Exception {
+        // Reproduces the one flow nothing covered: a submission that passes validation but fails
+        // at the relay. The controller flashes an EMPTY BindingResult plus the delivery, and the
+        // browser then GETs / with the same session. MockMvc gives every perform() a fresh
+        // context, so a bare get("/") sees a clean model and passes; only replaying the session
+        // reaches the state a real redirect produces. That is how this reached production.
+        MockHttpSession session = new MockHttpSession();
+        mvc.perform(post("/contact")
+                        .session(session)
+                        .param("name", "A C Recruiter")
+                        .param("email", "hr@example.com")
+                        .param("topic", "Job Opportunity")
+                        .param("message", "We are rebuilding a payment platform and need architecture advice."))
+                .andExpect(status().is3xxRedirection());
+
+        // Same session, as the browser's redirect would carry it.
+        mvc.perform(get("/").session(session))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"contact-result\"")))
+                .andExpect(content().string(containsString("form-result is-error")));
     }
 
     @Test

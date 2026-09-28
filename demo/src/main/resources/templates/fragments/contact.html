@@ -86,8 +86,8 @@
                      aria-describedby="err-name"
                      required>
               <p class="field__error" id="err-name"
-                 th:classappend="${contactFieldErrors['name'] == null ? '' : 'is-error'}"
-                 th:text="${contactFieldErrors['name']}"></p>
+                 th:classappend="${contactFieldErrors != null and contactFieldErrors['name'] != null ? 'is-error' : ''}"
+                 th:text="${contactFieldErrors == null ? '' : contactFieldErrors['name']}"></p>
             </div>
 
             <div class="field">
@@ -99,8 +99,8 @@
                      aria-describedby="err-email"
                      required>
               <p class="field__error" id="err-email"
-                 th:classappend="${contactFieldErrors['email'] == null ? '' : 'is-error'}"
-                 th:text="${contactFieldErrors['email']}"></p>
+                 th:classappend="${contactFieldErrors != null and contactFieldErrors['email'] != null ? 'is-error' : ''}"
+                 th:text="${contactFieldErrors == null ? '' : contactFieldErrors['email']}"></p>
             </div>
           </div>
 
@@ -116,8 +116,8 @@
               <span class="field__chevron" th:insert="~{fragments/icon :: icon('chevron-down', 15)}"></span>
             </span>
             <p class="field__error" id="err-topic"
-               th:classappend="${contactFieldErrors['topic'] == null ? '' : 'is-error'}"
-               th:text="${contactFieldErrors['topic']}"></p>
+               th:classappend="${contactFieldErrors != null and contactFieldErrors['topic'] != null ? 'is-error' : ''}"
+               th:text="${contactFieldErrors == null ? '' : contactFieldErrors['topic']}"></p>
           </div>
 
           <div class="field">
@@ -129,8 +129,8 @@
                       aria-describedby="err-message"
                       required></textarea>
             <p class="field__error" id="err-message"
-               th:classappend="${contactFieldErrors['message'] == null ? '' : 'is-error'}"
-               th:text="${contactFieldErrors['message']}"></p>
+               th:classappend="${contactFieldErrors != null and contactFieldErrors['message'] != null ? 'is-error' : ''}"
+               th:text="${contactFieldErrors == null ? '' : contactFieldErrors['message']}"></p>
           </div>
 
           <!-- Honeypot: offscreen, skipped by the keyboard, filled in by bots. -->

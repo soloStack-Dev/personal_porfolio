@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.demo.Model.ContactDelivery;
 import com.example.demo.Model.ContactForm;
 import com.example.demo.Model.ContactProperties;
+import jakarta.mail.AuthenticationFailedException;
+import jakarta.mail.MessagingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,6 +16,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.mail.MailAuthenticationException;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 
@@ -204,5 +208,45 @@ class ContactMailConfigurationTests {
                 .doesNotMatch("(?m)^spring\\.mail\\.username=.*")
                 .doesNotMatch("(?m)^spring\\.mail\\.password=.*")
                 .doesNotMatch("(?m)^\\s*spring\\.config\\.import=.*");
+    }
+
+    @Test
+    void aRejectedCredentialIsRecognisedThroughSpringsWrapper() {
+        // Gmail's 534-5.7.9 surfaces as jakarta AuthenticationFailedException, which Spring wraps
+        // in MailAuthenticationException. The classifier walks the cause chain, so the wrapper
+        // must not hide it - this is the difference between an actionable log line naming the App
+        // Password and a hundred-line stack trace with the reason buried in the last entry.
+        assertThat(ContactMailService.isAuthenticationFailure(
+                new MailAuthenticationException("send failed",
+                        new AuthenticationFailedException("534-5.7.9 Application-specific password required"))))
+                .isTrue();
+    }
+
+    @Test
+    void otherDeliveryFailuresAreNotMisreportedAsCredentialProblems() {
+        // A relay being down, or a message rejected for a bad From address, must not be dressed
+        // up as a credential problem: telling the operator to regenerate an App Password when the
+        // real fault is 550 or a timeout sends them down the wrong path entirely.
+        assertThat(ContactMailService.isAuthenticationFailure(
+                new MailAuthenticationException("send failed",
+                        new MessagingException("550 The specified from address does not match a permitted sender"))))
+                .isFalse();
+        assertThat(ContactMailService.isAuthenticationFailure(
+                new MailSendException("Mail server connection failed")))
+                .isFalse();
+        assertThat(ContactMailService.isAuthenticationFailure(
+                new MessagingException("Connection refused")))
+                .isFalse();
+        assertThat(ContactMailService.isAuthenticationFailure(new IllegalArgumentException("bad address")))
+                .isFalse();
+    }
+
+    @Test
+    void theSenderAddressPlaceholderIsRecognised() {
+        // A relay rejects a From address that is not the authenticated mailbox or an alias on it.
+        // app.contact.from defaults to a placeholder, so forgetting the key is easy and produces
+        // a 550 that only appears after authentication succeeds - i.e. still broken after the
+        // password is fixed. ContactMailService warns once when it sees the placeholder.
+        assertThat(ContactProperties.PLACEHOLDER_SENDER).isEqualTo("portfolio@localhost");
     }
 }
