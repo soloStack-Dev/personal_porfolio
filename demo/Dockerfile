@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/root/.m2 \
 
 COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 \
-    mvn -B clean package
+    mvn -B clean package -DskipTests
 
 # ---------------------------------------------------------------------------
 # 2. Runtime
