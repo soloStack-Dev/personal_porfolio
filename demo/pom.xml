@@ -38,6 +38,18 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
+		<!--
+			Compiles the @ConfigurationProperties records into
+			target/classes/META-INF/spring-configuration-metadata.json. Without it an IDE has no
+			idea app.contact.* exists, so it flags every line in application.properties as an
+			unknown key and offers no completion. It is compile-time only: <optional>true</optional>
+			keeps it off the runtime and test classpaths.
+		-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-configuration-processor</artifactId>
+			<optional>true</optional>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-thymeleaf</artifactId>

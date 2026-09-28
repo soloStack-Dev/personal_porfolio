@@ -13,7 +13,7 @@ Use the wrapper, not a system `mvn`:
 
 ```powershell
 .\mvnw.cmd spring-boot:run      # dev server, http://localhost:8080 (devtools live-reloads on classpath change)
-.\mvnw.cmd test                 # PortfolioPageTests (21) + DemoApplicationTests (1)
+.\mvnw.cmd test                 # 27 tests: PortfolioPageTests (21) + ContactMailConfigurationTests (5) + DemoApplicationTests (1)
 .\mvnw.cmd test -Dtest=PortfolioPageTests
 .\mvnw.cmd package              # produces the runnable jar in target/
 ```
@@ -53,6 +53,17 @@ docker compose down
   and defeats the no-config fallback where `ContactMailService` logs the enquiry instead of
   sending. SMTP settings are passed through via `env_file: .env` (`required: false`), so absent is
   the only unset value. Copy `.env.example` to `.env` to enable real delivery; `.env` is gitignored.
+  Quote any password containing `#` or spaces, or dotenv eats the rest of the line as a comment.
+- **`spring.mail` has exactly eleven properties, and an unknown one is silently ignored.** Read
+  from `spring-boot-mail`'s `spring-configuration-metadata.json`: `default-encoding`, `host`,
+  `jndi-name`, `password`, `port`, `properties`, `protocol`, `ssl.bundle`, `ssl.enabled`,
+  `test-connection`, `username`. There is **no** `spring.mail.starttls` and **no**
+  `spring.mail.smtp.auth`. Both are traps: no error, no warning, no startup failure, the key is
+  just dropped and the send fails later against a live relay. Auth and STARTTLS are the dotted map
+  keys `spring.mail.properties.mail.smtp.auth` / `...starttls.enable`, which live in
+  `application.properties` because an environment variable cannot express a dotted map key —
+  `SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH` does not bind. `ContactMailConfigurationTests` asserts
+  all of this against the assembled `JavaMailSenderImpl`, so do not delete it to "simplify".
 
 **Host port 8080 is not available on this machine.** The other project's `meminfo-rag-app`
 container has host port 8080 *reserved but unbound* — it was started while the local
