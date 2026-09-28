@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,10 +64,16 @@ class ContactMailFailurePageTests {
     @Test
     void theRedirectTargetRendersWhenTheFlashAttributesComeBack() throws Exception {
         // Reproduces the one flow nothing covered: a submission that passes validation but fails
-        // at the relay. The controller flashes an EMPTY BindingResult plus the delivery, and the
-        // browser then GETs / with the same session. MockMvc gives every perform() a fresh
+        // at the relay. The controller flashes serializable Strings plus the delivery status, and
+        // the browser then GETs / with the same session. MockMvc gives every perform() a fresh
         // context, so a bare get("/") sees a clean model and passes; only replaying the session
         // reaches the state a real redirect produces. That is how this reached production.
+        //
+        // Only genuinely serializable values may be flashed. ContactForm, BindingResult and
+        // ContactDelivery are not Serializable, and when one did not come back through the
+        // session, th:object="${contactForm}" had nothing to bind to and this page threw
+        // "Neither BindingResult nor plain target object for bean name 'contactForm'" - a 500 on
+        // the whole portfolio for every visitor who ever submitted the form.
         MockHttpSession session = new MockHttpSession();
         mvc.perform(post("/contact")
                         .session(session)
@@ -79,7 +87,12 @@ class ContactMailFailurePageTests {
         mvc.perform(get("/").session(session))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("id=\"contact-result\"")))
-                .andExpect(content().string(containsString("form-result is-error")));
+                .andExpect(content().string(containsString("form-result is-error")))
+                // The rejected input has to be rebuilt from the flashed strings, or the visitor
+                // retypes a long message because the relay had a bad minute.
+                .andExpect(content().string(containsString("A C Recruiter")))
+                .andExpect(content().string(containsString("hr@example.com")))
+                .andExpect(content().string(containsString("Job Opportunity")));
     }
 
     @Test

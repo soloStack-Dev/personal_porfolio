@@ -1,5 +1,6 @@
 package com.example.demo.Controller;
 
+import com.example.demo.Model.ContactDelivery;
 import com.example.demo.Model.ContactForm;
 import com.example.demo.Model.FilterOption;
 import com.example.demo.Model.Project;
@@ -9,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -57,34 +57,69 @@ public class PageController {
         // Consumed by the 04 / DIALOGUE fragment. Flash attributes from a no-JavaScript form
         // submission are already in the model by the time this handler runs, so the result
         // region is rendered with exactly the markup the htmx path swaps in.
-        if (!model.asMap().containsKey("contactForm")) {
-            model.addAttribute("contactForm", new ContactForm());
-        }
+        //
+        // Everything is rebuilt from flash values that are guaranteed to have survived the trip.
+        // ContactForm, BindingResult and ContactDelivery are not Serializable, so ContactController
+        // flashes Strings and a LinkedHashMap instead of the objects themselves and this handler
+        // puts the objects back. The fragment binds the inputs with th:object="${contactForm}" and
+        // th:field="*{name}", which throws "Neither BindingResult nor plain target object for bean
+        // name 'contactForm'" when the bean is absent - a 500 on the contact section of the whole
+        // page, taken by every visitor who ever submitted the form. Rebuilding unconditionally is
+        // what makes th:field safe on the first visit, the redirect target, and every render after.
+        model.addAttribute("contactForm", rebuildContactForm(model));
+        model.addAttribute("contactDelivery", rebuildContactDelivery(model));
         model.addAttribute("contactState", resolveContactState(model));
-        model.addAttribute("contactFieldErrors", firstFieldMessages(model.asMap().get("contactErrors")));
+        model.addAttribute("contactFieldErrors", rebuildFieldMessages(model));
         return "index";
     }
 
-    private String resolveContactState(Model model) {
-        if (model.asMap().containsKey("contactErrors")) {
-            return "error";
+    /**
+     * Restores the visitor's rejected input, or an empty form on a first visit.
+     */
+    private ContactForm rebuildContactForm(Model model) {
+        Map<String, Object> flashed = model.asMap();
+        if (flashed.get("contactFormName") == null) {
+            return new ContactForm();
         }
-        return model.asMap().containsKey("contactDelivery") ? "success" : null;
+        ContactForm form = new ContactForm();
+        form.setName(asString(flashed.get("contactFormName")));
+        form.setEmail(asString(flashed.get("contactFormEmail")));
+        form.setTopic(asString(flashed.get("contactFormTopic")));
+        form.setMessage(asString(flashed.get("contactFormMessage")));
+        return form;
     }
 
-    /**
-     * Flattens a flashed {@link BindingResult} into {@code field name -> first message}.
-     *
-     * <p>Done here rather than in the template because {@code th:errors} deletes its host
-     * element when a field is valid — and the 04 / DIALOGUE error slots must survive in the DOM
-     * so that htmx has something to out-of-band swap into.
-     */
-    private Map<String, String> firstFieldMessages(Object flashed) {
-        if (!(flashed instanceof BindingResult binding) || !binding.hasFieldErrors()) {
-            return Map.of();
+    private ContactDelivery rebuildContactDelivery(Model model) {
+        Map<String, Object> flashed = model.asMap();
+        Object status = flashed.get("contactDeliveryStatus");
+        if (status == null) {
+            return null;
         }
-        Map<String, String> messages = new LinkedHashMap<>();
-        binding.getFieldErrors().forEach(error -> messages.putIfAbsent(error.getField(), error.getDefaultMessage()));
-        return messages;
+        return new ContactDelivery(
+                ContactDelivery.Status.valueOf(asString(status)),
+                asString(flashed.get("contactDeliveryMessage")));
+    }
+
+    private String resolveContactState(Model model) {
+        Map<String, Object> flashed = model.asMap();
+        if (flashed.get("contactFailed") != null) {
+            return "error";
+        }
+        return flashed.get("contactDeliveryStatus") != null ? "success" : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, String> rebuildFieldMessages(Model model) {
+        Object flashed = model.asMap().get("contactFieldErrorMessages");
+        if (flashed instanceof Map<?, ?> map) {
+            Map<String, String> messages = new LinkedHashMap<>();
+            map.forEach((field, message) -> messages.put(String.valueOf(field), asString(message)));
+            return messages;
+        }
+        return Map.of();
+    }
+
+    private String asString(Object value) {
+        return value == null ? null : String.valueOf(value);
     }
 }
