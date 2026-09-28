@@ -12,6 +12,13 @@ target/
 .env.*
 !.env.example
 
+# Same reason, same file: holds the SMTP password. src/main/resources/application.properties is
+# tracked and packaged into the jar and the GitHub repo is public, so credentials cannot live
+# there. application-secret.properties.example is the committed template.
+application-secret.properties
+application-secret.properties.*
+!application-secret.properties.example
+
 ### Docker ###
 docker-compose.override.yml
 .docker/

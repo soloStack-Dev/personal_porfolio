@@ -13,7 +13,7 @@ Use the wrapper, not a system `mvn`:
 
 ```powershell
 .\mvnw.cmd spring-boot:run      # dev server, http://localhost:8080 (devtools live-reloads on classpath change)
-.\mvnw.cmd test                 # 34 tests: PortfolioPageTests (24) + ContactMailFailurePageTests (3) + ContactMailConfigurationTests (6) + DemoApplicationTests (1)
+.\mvnw.cmd test                 # 38 tests: PortfolioPageTests (24) + ContactMailFailurePageTests (3) + ContactMailConfigurationTests (10) + DemoApplicationTests (1)
 .\mvnw.cmd test -Dtest=PortfolioPageTests
 .\mvnw.cmd package              # produces the runnable jar in target/
 ```
@@ -68,13 +68,30 @@ docker compose down
   properties loader keeps the quote characters as part of the password. An unquoted value is safe
   in both because `#` only starts a comment at the beginning of a line, so a password containing
   `#` survives intact. `ContactMailConfigurationTests` round-trips exactly such a password.
-- **Gmail needs an App Password, not the account password, and no client ID or secret.** Google
-  removed "less secure app" access in 2022, so a normal account password is rejected outright.
-  Client ID/secret are OAuth2 credentials and are not involved in sending as yourself; the config
-  is `smtp.gmail.com`, port `587`, `spring.mail.username` as the full address, and the 16-letter
-  App Password in `SPRING_MAIL_PASSWORD`. `APP_CONTACT_FROM` must equal the authenticated address
-  or an alias on it, or Gmail rejects the send with `550 The specified from address does not match
-  a permitted sender`.
+- **The GitHub repo is public, so the SMTP password must never reach a tracked file.**
+  `src/main/resources/application.properties` is both committed and packaged into the jar, so
+  credentials go in `demo/application-secret.properties` (untracked, real properties syntax) or
+  `demo/.env` (untracked, dotenv syntax for compose's `env_file`). `application.properties`
+  imports both with
+  `spring.config.import=optional:file:application-secret.properties[.properties],optional:file:.env[.properties]`.
+  Copy `application-secret.properties.example` to create the former. **Both files must stay
+  unindented in `.gitignore`:** gitignore reads leading whitespace as part of the filename, so an
+  indented `.env` rule silently stops matching and the next `git add -A` commits the password.
+  `ContactMailConfigurationTests` asserts the ignore rules and the imports.
+- **`src/test/resources/application.properties` deliberately shadows the main one**, and must keep
+  no `spring.mail.host`/`username`/`password`/`spring.config.import`. `@SpringBootTest` runs a real
+  `SpringApplication`, so `ConfigDataEnvironmentPostProcessor` *does* run and the shadowing is the
+  only thing stopping the suite from loading the developer's genuine Gmail password and opening
+  real connections to `smtp.gmail.com`. With no host, `JavaMailSender` is not created and the page
+  tests take the `LOGGED` branch. Asserted by `theTestClasspathCannotSendRealMail`.
+- **Gmail needs an App Password, not the account password, and no client ID or secret.** Client
+  ID/secret are OAuth2 credentials and are not involved in sending as yourself; the config is
+  `smtp.gmail.com`, port `587`, `spring.mail.username` as the full address, and the 16-letter App
+  Password in `spring.mail.password`. An account password is refused with
+  `534-5.7.9 Application-specific password required` — that error is proof the whole chain works,
+  since it means host, TLS, and the password all reached Google. `app.contact.from` must equal the
+  authenticated address or an alias on it, or Gmail rejects the send with
+  `550 The specified from address does not match a permitted sender`.
 
 **Host port 8080 is not available on this machine.** The other project's `meminfo-rag-app`
 container has host port 8080 *reserved but unbound* — it was started while the local

@@ -137,11 +137,11 @@ class ContactMailConfigurationTests {
     }
 
     @Test
-    void applicationPropertiesImportsTheEnvFileSoTheFixCannotBeUndone() {
-        // The declaration itself, read from the file, so it cannot be deleted by someone who
-        // only ever runs Docker and sees .env keep working there.
+    void applicationPropertiesImportsTheUntrackedSecretFileAndTheEnvFile() {
+        // The declarations themselves, read from the file, so they cannot be deleted by someone
+        // who only ever runs Docker and sees the other mechanism keep working there.
         //
-        // Only the declaration is asserted here, not the resulting sender. Binding an imported
+        // Only the declarations are asserted here, not the resulting sender. Binding an imported
         // file cannot be covered by this class: ApplicationContextRunner builds a plain
         // AnnotationConfigApplicationContext and never runs ConfigDataEnvironmentPostProcessor,
         // so spring.config.import is silently ignored and there is no sender to inspect. The
@@ -150,6 +150,59 @@ class ContactMailConfigurationTests {
         String applicationProperties = readRepoFile("src/main/resources/application.properties");
 
         assertThat(applicationProperties)
-                .contains("spring.config.import=optional:file:.env[.properties]");
+                .contains("optional:file:application-secret.properties[.properties]")
+                .contains("optional:file:.env[.properties]");
+    }
+
+    @Test
+    void noTrackedFileCarriesCredentialsOrIsWiredToLookForOne() {
+        // application-secret.properties and .env are both untracked, because either would
+        // otherwise publish the SMTP password into a public repository and into the built jar.
+        // Asserted on the ignore rules rather than trusted, since an indented pattern silently
+        // stops matching: gitignore reads leading whitespace as part of the filename.
+        String gitignore = readRepoFile(".gitignore");
+
+        assertThat(gitignore)
+                .contains("\n.env\n")
+                .contains("\napplication-secret.properties\n")
+                .doesNotContain("  .env");
+    }
+
+    @Test
+    void noTrackedFileCarriesTheMailPassword() {
+        // The one assertion that matters for a public repository. Someone copying credentials
+        // into src/main/resources/application.properties is the obvious thing to try when the
+        // form will not send, and that file is both committed and packaged into the jar.
+        String mainProperties = readRepoFile("src/main/resources/application.properties");
+
+        assertThat(mainProperties).doesNotMatch("(?m)^spring\\.mail\\.password=.*");
+    }
+
+    @Test
+    void theSenderAddressIsNotDeclaredInBothFilesWithDifferentValues() {
+        // app.contact.from must equal the authenticated address, and it lives in the untracked
+        // file. Declaring it here as well means the two files disagree and import precedence
+        // silently decides which one Gmail rejects with a 550.
+        String mainProperties = readRepoFile("src/main/resources/application.properties");
+
+        assertThat(mainProperties).doesNotMatch("(?m)^app\\.contact\\.from=.*");
+    }
+
+    @Test
+    void theTestClasspathCannotSendRealMail() {
+        // src/test/resources/application.properties shadows the main one, and shadowing is what
+        // drops the credential import. @SpringBootTest runs the real config pipeline, so without
+        // that shadow the developer's actual Gmail password would be loaded and
+        // ContactMailFailurePageTests would open real connections to smtp.gmail.com. Asserted
+        // because a well-meaning "just add the host here" would send test mail to a real inbox.
+        String testProperties = readRepoFile("src/test/resources/application.properties");
+
+        // Anchored to the start of a line so the explanatory comments in that file, which name
+        // these keys while explaining why they are absent, do not count as declarations.
+        assertThat(testProperties)
+                .doesNotMatch("(?m)^spring\\.mail\\.host=.*")
+                .doesNotMatch("(?m)^spring\\.mail\\.username=.*")
+                .doesNotMatch("(?m)^spring\\.mail\\.password=.*")
+                .doesNotMatch("(?m)^\\s*spring\\.config\\.import=.*");
     }
 }
