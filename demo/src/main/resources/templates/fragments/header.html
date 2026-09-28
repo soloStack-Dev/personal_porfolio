@@ -35,6 +35,14 @@
     -->
     <input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-controls="site-nav">
 
+    <!--
+      Dark/light toggle. Same idea as the drawer: a real checkbox, so the browser holds the
+      state, screen readers announce it, and :has(#theme-toggle:checked) re-tints the page.
+      No script, no localStorage - the choice resets on the next full page load.
+      It sits before the nav so the focus ring can be painted on its label.
+    -->
+    <input type="checkbox" id="theme-toggle" class="theme-toggle-input">
+
     <nav class="site-nav" id="site-nav" aria-label="Primary">
       <ul class="site-nav__list" data-nav-list>
         <li><a class="site-nav__link" href="#top" data-nav-link data-section="top">Home</a></li>
@@ -50,6 +58,15 @@
         Get in touch
         <span th:insert="~{fragments/icon :: icon('arrow-right', 14)}"></span>
       </a>
+
+      <label class="theme-toggle" for="theme-toggle" title="Switch between dark and light">
+        <!-- Both glyphs are always in the DOM; CSS swaps them. No JS class swap to go stale. -->
+        <span class="theme-toggle__icon theme-toggle__icon--light"
+              th:insert="~{fragments/icon :: icon('sun', 18)}"></span>
+        <span class="theme-toggle__icon theme-toggle__icon--dark"
+              th:insert="~{fragments/icon :: icon('moon', 18)}"></span>
+        <span class="visually-hidden">Switch between dark and light theme</span>
+      </label>
 
       <label class="nav-toggle" for="nav-toggle" aria-label="Toggle navigation menu">
         <span class="nav-toggle__icon" th:insert="~{fragments/icon :: icon('menu', 20)}"></span>

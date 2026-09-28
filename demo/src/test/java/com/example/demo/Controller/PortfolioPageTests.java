@@ -10,6 +10,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.example.demo.Model.ContactDelivery;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -127,6 +131,92 @@ class PortfolioPageTests {
                 .andExpect(model().attribute("activeFilterId", "all"))
                 .andExpect(model().attribute("projectCount", 2))
                 .andExpect(content().string(Matchers.containsString("2 projects · All")));
+    }
+
+    @Test
+    void theSkillsListsStateWhatIsActuallyUsed() throws Exception {
+        // The 02 / CAPABILITIES cards are a claim about what this site is built with, so they
+        // are asserted rather than left to drift. Core Languages is Java, SQL, HTMX; the
+        // languages this project does not use must not come back. Backend & Web gained Nginx
+        // and lost jQuery. Asserting the removal is the part that matters, because a
+        // "contains" check alone would pass even if someone re-added TypeScript later.
+        String html = mvc.perform(get("/")).andReturn().getResponse().getContentAsString();
+
+        assertThat(html)
+                .contains(">Java</li>")
+                .contains(">SQL</li>")
+                .contains(">HTMX</li>")
+                .contains(">Nginx</li>");
+
+        // None of these are used anywhere in this project, so advertising them would be fiction.
+        for (String removed : new String[] {"JavaScript", "TypeScript", "jQuery"}) {
+            assertThat(html).doesNotContain(">" + removed + "</li>");
+        }
+    }
+
+    @Test
+    void eachProjectCardStatesHowItCameToBeAndTheToneIsStyled() throws Exception {
+        // statusTone is concatenated into a class name in the template, so an unrecognised value
+        // fails silently and the dot loses its colour. This asserts the label, the class, and
+        // that the CSS actually defines that tone.
+        String html = mvc.perform(get("/")).andReturn().getResponse().getContentAsString();
+        String css = Files.readString(
+                Path.of("src/main/resources/static/css/site.css"), StandardCharsets.UTF_8);
+
+        // The data-entry platform was designed and built independently, so it says so.
+        assertThat(html)
+                .contains("Self-Initiated Project")
+                .contains("class=\"status status--self\"")
+                .contains("designed and built independently");
+
+        // The RAG project is still the academic one.
+        assertThat(html).contains("class=\"status status--academic\"");
+
+        // Every tone rendered must have a rule, or the dot silently loses its colour.
+        for (String tone : List.of("live", "metric", "teams", "academic", "self", "installs")) {
+            assertThat(css).as("site.css must define .status--" + tone).contains(".status--" + tone);
+        }
+    }
+
+    @Test
+    void theDarkThemeIsACheckboxAndEveryTokenItOverridesExistsInTheLightTheme() throws Exception {
+        // The dark theme is one block of custom-property overrides selected by
+        // body:has(#theme-toggle:checked). Two ways this silently rots, both asserted here:
+        // a component using a literal colour instead of a token, which no theme can reach; and
+        // an override naming a token that :root never defines, which does nothing at all.
+        String html = mvc.perform(get("/")).andReturn().getResponse().getContentAsString();
+        // Normalise line endings: the checked-out stylesheet uses CRLF on Windows, so any
+        // multi-line literal in this test would otherwise fail only on this platform.
+        String css = Files.readString(
+                Path.of("src/main/resources/static/css/site.css"), StandardCharsets.UTF_8)
+                .replace("\r\n", "\n");
+
+        assertThat(html)
+                .contains("id=\"theme-toggle\"")
+                .contains("class=\"theme-toggle-input\"")
+                .contains("for=\"theme-toggle\"")
+                .contains("theme-toggle__icon--light")
+                .contains("theme-toggle__icon--dark")
+                .contains("Switch between dark and light theme");
+
+        // Both glyphs ship in the DOM and CSS swaps them, so there must be no data-* or
+        // inline-script fallback to go stale.
+        assertThat(html).doesNotContain("data-theme-icon");
+
+        // Locate the real rule, not the comment above it that also spells out the selector:
+        // require the declaration to follow the opening brace on its own line.
+        int darkStart = css.indexOf("body:has(#theme-toggle:checked) {\n  color-scheme: dark;");
+        assertThat(darkStart).as("the dark token block must exist").isPositive();
+        String darkBlock = css.substring(darkStart, css.indexOf("\n}", darkStart));
+
+        // Every --token overridden in dark mode must be defined in :root, or it inherits
+        // nothing and the override is a no-op.
+        String root = css.substring(css.indexOf(":root {"), css.indexOf("}", css.indexOf(":root {")));
+        for (String token : List.copyOf(
+                java.util.regex.Pattern.compile("--[a-z0-9-]+(?=\\s*:)")
+                        .matcher(darkBlock).results().map(java.util.regex.MatchResult::group).toList())) {
+            assertThat(root).as("dark theme overrides " + token).contains(token + ":");
+        }
     }
 
     @Test

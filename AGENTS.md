@@ -111,11 +111,24 @@ is now server-rendered or pure CSS:
 | `data-placeholder-link` click-to-confess button | inert `<span>` + visually-hidden "not available yet" |
 | Toast host | removed; `#contact-result` already announces via `role="status"` / `role="alert"` |
 | Sticky-header `is-stuck` class | unconditional `box-shadow` |
+| (never existed) dark/light toggle | `input#theme-toggle` + `body:has(#theme-toggle:checked)` token overrides |
+
+**Dark mode is one block of token overrides, and that is only possible because every colour is a
+token.** The light sheet originally carried 32 hardcoded hex values and 7 hardcoded `rgba()` calls
+scattered through the component rules; those are now tokens (`--text-2`, `--border-strong`,
+`--tint-success`, `--on-accent`, `--shadow-rgb`, …). Section 14 of `site.css` reassigns them under
+`body:has(#theme-toggle:checked)`. If you introduce a literal colour in a component rule, dark mode
+will silently not reach it — `theDarkThemeIsACheckboxAndEveryTokenItOverridesExistsInTheLightTheme`
+asserts both directions: no literals in sections 2–13, and every token the dark block overrides must
+actually be defined in `:root`. Note `--on-accent` inverts in dark mode (dark text on the now-lighter
+purple fills), and text-on-accent contrast is asserted by hand, not by the test.
 
 If you add behaviour, prefer a controller method, a model attribute, or a CSS selector. Before
 reintroducing a `<script>`, note what is deliberately lost: the drawer no longer closes on Escape or
 on an outside click (tap-outside is a full-viewport `<label>`, which does not cover keyboard), nav
-highlighting follows navigation rather than scroll position, and toasts are gone.
+highlighting follows navigation rather than scroll position, toasts are gone, and **the theme choice
+resets to light on any full page load** — `?filter=` links and the contact form's Post/Redirect/Get
+both reload, and there is no localStorage. That is the one real cost of keeping the no-JS rule.
 
 **All page copy lives in `PortfolioService`, not in the templates.** It was rewritten with the
 site owner's real details (Faleel H, Java developer, BCA graduate). `OWNER_NAME`, `OWNER_ROLE`,

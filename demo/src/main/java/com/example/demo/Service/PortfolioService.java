@@ -53,15 +53,15 @@ public class PortfolioService {
                 new ExpertiseCard(
                         "code",
                         "Core Languages",
-                        "Programming languages and database technologies used for application development.",
-                        List.of("Java", "JavaScript", "TypeScript", "SQL"),
+                        "Programming languages, query languages, and the templating layer used for application development.",
+                        List.of("Java", "SQL", "HTMX"),
                         false),
                 new ExpertiseCard(
                         "layout",
                         "Backend & Web",
                         "Building backend services, APIs, and interactive web applications.",
                         List.of("Spring Boot", "Spring AI", "Spring Data JPA", "REST APIs", "WebSocket",
-                                "HTML5", "CSS3", "HTMX", "Bootstrap", "jQuery"),
+                                "Nginx", "HTML5", "CSS3", "HTMX", "Bootstrap"),
                         false),
                 new ExpertiseCard(
                         "cloud",
@@ -161,11 +161,12 @@ public class PortfolioService {
                 new Project(
                         "data-entry-platform",
                         "Backend / Web Application",
-                        "Academic Project",
-                        "academic",
+                        "Self-Initiated Project",
+                        "self",
                         "Data Entry Management Platform",
-                        "A server-rendered data-entry application for managing equipment movement between users "
-                                + "and warehouses using Spring Boot, Thymeleaf, HTMX, and MySQL.",
+                        "A server-rendered data-entry application I designed and built independently to manage "
+                                + "equipment movement between users and warehouses, using Spring Boot, Thymeleaf, HTMX, "
+                                + "and MySQL.",
                         List.of("Java 21", "Spring Boot", "Spring Data JPA", "Thymeleaf", "HTMX", "Bootstrap",
                                 "MySQL", "Docker", "Maven"),
                         List.of(

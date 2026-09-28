@@ -8,25 +8,59 @@
    1. Tokens
    -------------------------------------------------------------------------- */
 
-:root {
-  /* Colour system — Context/web_page_develop_prompt_half.md §16 */
-  --purple: #6d28d9;
-  --purple-2: #7c3aed;
-  --purple-tint: #f3eeff;
-  --purple-tint-2: #efe8ff;
-  --coral: #c85a45;
-  --ink: #0b0f19;
-  --body: #334155;
-  --warm: #faf9f6;
-  --surface: #ffffff;
-  --border: #e8e0d5;
-  --border-input: #bfc3cc;
-  --muted: #64748b;
-  --success: #22c55e;
-  --danger: #c0392f;
-  --orange: #d97706;
+  :root {
+    /* Colour system — Context/web_page_develop_prompt_half.md A16 */
+    --purple: #6d28d9;
+    --purple-2: #7c3aed;
+    --purple-tint: #f3eeff;
+    --purple-tint-2: #efe8ff;
+    --coral: #c85a45;
+    --ink: #0b0f19;
+    --body: #334155;
+    --warm: #faf9f6;
+    --surface: #ffffff;
+    --border: #e8e0d5;
+    --border-input: #bfc3cc;
+    --muted: #64748b;
+    --success: #22c55e;
+    --danger: #c0392f;
+    --orange: #d97706;
 
-  --gradient: linear-gradient(96deg, var(--purple) 0%, #8b3fd0 45%, var(--coral) 100%);
+    /* Secondary text tones. These were one-off hex values scattered through the
+       stylesheet; they are tokens now so the dark theme has something to override. The light
+       values are unchanged, so the light rendering is pixel-identical to before. */
+    --text-2: #4b5566;   /* card + section prose, icon buttons */
+    --text-3: #3f4757;   /* nav and footer links */
+    --text-4: #3d4655;   /* badges */
+    --faint: #8b95a7;    /* input placeholders */
+    --border-soft: #a9aeb8;    /* input hover border */
+    --border-strong: #ded3c3;  /* hover borders on cards and buttons */
+    --purple-deep: #5b21b6;
+    --purple-ink: #5b4b7a;
+    --green: #1f9d55;
+    --on-accent: #ffffff;      /* text sitting on purple / coral / gradient */
+
+    /* Tinted backgrounds, used for status and validation states. */
+    --tint-orange: #fdf1e7;
+    --tint-success: #f2fbf6;
+    --tint-success-line: #cdeedb;
+    --tint-danger: #fdf6f5;
+    --tint-danger-line: #f0d8d4;
+    --tint-danger-field: #fdf7f6;
+    --danger-ink: #6b4440;
+    --overlay: rgba(255, 255, 255, 0.9);  /* status panel sitting over the hero photo */
+
+    /* Component colours, kept as raw channels so translucent tints can be derived with
+       rgba(var(--x), a) in both themes. A single --shadow-rgb lets the dark theme make
+       every shadow darker by reassigning one value. */
+    --purple-rgb: 109, 40, 217;
+    --coral-rgb: 200, 90, 69;
+    --success-rgb: 34, 197, 94;
+    --danger-rgb: 192, 57, 47;
+    --shadow-rgb: 11, 15, 25;
+
+    --grad-mid: #8b3fd0;
+    --gradient: linear-gradient(96deg, var(--purple) 0%, var(--grad-mid) 45%, var(--coral) 100%);
 
   /* Type */
   --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
@@ -45,9 +79,14 @@
   --t-base: 200ms;
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 
-  --shadow-soft: 0 1px 2px rgba(11, 15, 25, 0.04), 0 10px 30px -18px rgba(11, 15, 25, 0.18);
-  --shadow-lift: 0 2px 4px rgba(11, 15, 25, 0.05), 0 18px 40px -20px rgba(11, 15, 25, 0.24);
-  --shadow-cta: 0 8px 20px -10px rgba(109, 40, 217, 0.55);
+    --shadow-soft: 0 1px 2px rgba(var(--shadow-rgb), 0.04), 0 10px 30px -18px rgba(var(--shadow-rgb), 0.18);
+    --shadow-lift: 0 2px 4px rgba(var(--shadow-rgb), 0.05), 0 18px 40px -20px rgba(var(--shadow-rgb), 0.24);
+    --shadow-cta: 0 8px 20px -10px rgba(var(--purple-rgb), 0.55);
+    --shadow-header: 0 6px 20px -16px rgba(var(--shadow-rgb), 0.5);
+    --shadow-status: 0 2px 10px -6px rgba(var(--shadow-rgb), 0.35);
+    --ring: 0 0 0 3px rgba(var(--purple-rgb), 0.14);
+    --ring-danger: 0 0 0 3px rgba(var(--danger-rgb), 0.14);
+    --ring-success: 0 0 0 3px rgba(var(--success-rgb), 0.16);
 
   /* Layout — the 845–850px content column, never the full viewport */
   --container: 845px;
@@ -137,7 +176,7 @@ button { cursor: pointer; background: none; border: 0; }
   padding: 10px 16px;
   border-radius: 12px;
   background: var(--purple);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 13px;
   font-weight: 600;
   box-shadow: var(--shadow-lift);
@@ -195,13 +234,13 @@ button { cursor: pointer; background: none; border: 0; }
 
 .btn--gradient {
   background: var(--gradient);
-  color: #fff;
+  color: var(--on-accent);
   box-shadow: var(--shadow-cta);
 }
 
 .btn--gradient:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 26px -10px rgba(109, 40, 217, 0.62);
+  box-shadow: 0 12px 26px -10px rgba(var(--purple-rgb), 0.62);
 }
 
 .btn--outline {
@@ -215,7 +254,7 @@ button { cursor: pointer; background: none; border: 0; }
 }
 
 .btn--outline:hover {
-  border-color: #ded3c3;
+  border-color: var(--border-strong);
   transform: translateY(-1px);
 }
 
@@ -293,7 +332,7 @@ button { cursor: pointer; background: none; border: 0; }
   transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
-.tag:hover { background: var(--warm); border-color: #ded3c3; }
+.tag:hover { background: var(--warm); border-color: var(--border-strong); }
 
 .tags--sm .tag { height: 21px; font-size: 8.5px; display: inline-flex; align-items: center; }
 
@@ -307,7 +346,7 @@ button { cursor: pointer; background: none; border: 0; }
   z-index: 40;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  box-shadow: 0 6px 20px -16px rgba(11, 15, 25, 0.5);
+  box-shadow: var(--shadow-header);
 }
 
 .site-header__inner {
@@ -332,7 +371,7 @@ button { cursor: pointer; background: none; border: 0; }
   height: 32px;
   border-radius: var(--r-icon);
   background: var(--gradient);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -369,7 +408,7 @@ button { cursor: pointer; background: none; border: 0; }
   display: block;
   padding: 6px 13px;
   border-radius: 16px;
-  color: #3f4757;
+  color: var(--text-3);
   font-size: 12.5px;
   font-weight: 500;
   transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
@@ -388,16 +427,53 @@ body:has(#skills:target) .site-nav__link[data-section="skills"],
 body:has(#projects:target) .site-nav__link[data-section="projects"],
 body:has(#contact:target) .site-nav__link[data-section="contact"] {
   background: var(--purple);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 600;
 }
 
 .site-header__actions { display: flex; align-items: center; gap: 10px; }
 
-/* The drawer state: a real checkbox, visually hidden but still focusable and still announced
-   by screen readers, plus the <label> that paints the button. It must be a preceding sibling
-   of .site-nav, which is why the input sits in the header markup before the nav. */
-.nav-toggle-input {
+/* Dark/light toggle. Visually a peer of .nav-toggle, but always visible: it is useless on a
+   page with no drawer, and it is the one control a visitor is most likely to reach for. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text-3);
+  cursor: pointer;
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease),
+              transform var(--t-fast) var(--ease);
+}
+
+.theme-toggle:hover { color: var(--purple); border-color: var(--border-strong); transform: translateY(-1px); }
+
+/* Focus lives on the hidden input, so the ring has to be painted on its label. */
+.theme-toggle-input:focus-visible ~ .site-header__actions .theme-toggle {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+}
+
+.theme-toggle__icon { display: inline-flex; align-items: center; justify-content: center; }
+
+/* Both glyphs are in the DOM; CSS picks one. "Light" names the theme the button switches *to*,
+   which is the opposite of the icon it shows, so the pairing is spelled out rather than implied. */
+.theme-toggle__icon--dark { display: none; }
+body:has(#theme-toggle:checked) .theme-toggle__icon--light { display: none; }
+body:has(#theme-toggle:checked) .theme-toggle__icon--dark { display: inline-flex; }
+
+/* Both state checkboxes - the mobile drawer and the dark-mode toggle.
+   Visually hidden, but still focusable and still announced by screen readers, because the
+   pattern is a real <input type="checkbox"> with a <label> painting the button, not a
+   scripted div. Each input must be a preceding sibling of the thing it controls, which is
+   why both sit in the header markup before the nav.
+   The identical visually-hidden block used for .visually-hidden is section 12. */
+.nav-toggle-input,
+.theme-toggle-input {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -463,7 +539,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--warm);
-  color: #3d4655;
+  color: var(--text-4);
   font-size: 11.5px;
   white-space: nowrap;
 }
@@ -473,7 +549,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
   height: 6px;
   border-radius: 50%;
   background: var(--purple);
-  box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.14);
+  box-shadow: var(--ring);
 }
 
 .eyebrow {
@@ -534,7 +610,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
   border: 1px solid transparent;
   border-radius: 50%;
   background: var(--warm);
-  color: #4b5566;
+  color: var(--text-2);
   transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease),
               transform var(--t-base) var(--ease), background-color var(--t-fast) var(--ease);
 }
@@ -586,9 +662,9 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
   padding: 0 10px;
   border: 1px solid var(--border);
   border-radius: 9px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--overlay);
   backdrop-filter: blur(6px);
-  box-shadow: 0 2px 10px -6px rgba(11, 15, 25, 0.35);
+  box-shadow: var(--shadow-status);
   font-size: 10.5px;
   color: var(--body);
 }
@@ -600,7 +676,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
   height: 6px;
   border-radius: 50%;
   background: var(--success);
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.16);
+  box-shadow: var(--ring-success);
   flex: none;
 }
 
@@ -663,7 +739,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
 .section__subtitle {
   margin: 10px 0 0;
   font-size: 13.5px;
-  color: #4b5566;
+  color: var(--text-2);
 }
 
 /* --------------------------------------------------------------------------
@@ -800,7 +876,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
 .stat:hover,
 .project:hover,
 .expertise-card:hover {
-  border-color: #ded3c3;
+  border-color: var(--border-strong);
   box-shadow: var(--shadow-soft);
 }
 
@@ -838,7 +914,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
   max-width: 40ch;
   font-size: 9.5px;
   line-height: 1.55;
-  color: #4b5566;
+  color: var(--text-2);
 }
 
 .expertise-card .tags { margin: auto 0 0; padding-top: 14px; }
@@ -865,7 +941,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
   height: 22px;
   padding: 0 12px;
   border-radius: 14px;
-  color: #5b4b7a;
+  color: var(--purple-ink);
   font-size: 10.5px;
   font-weight: 500;
   text-decoration: none;
@@ -878,7 +954,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
 
 .filter__pill.is-active {
   background: var(--purple);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 600;
 }
 
@@ -943,11 +1019,15 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
 .status__dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
 
 .status--live,
-.status--installs { color: #1f9d55; }
+.status--installs { color: var(--green); }
 
 .status--metric { color: var(--orange); }
 .status--teams,
 .status--academic { color: var(--purple); }
+
+/* "self" = Self-Initiated Project. Coral rather than purple so the two project cards are
+   distinguishable at a glance; an unstyled tone would fall back to inherited text colour. */
+.status--self { color: var(--coral); }
 
 .project__title {
   margin: 16px 0 0;
@@ -1011,7 +1091,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
 }
 
 .project-link--primary { color: var(--purple); }
-.project-link--primary:hover { color: #5b21b6; text-decoration: underline; }
+.project-link--primary:hover { color: var(--purple-deep); text-decoration: underline; }
 .project-link--secondary { color: var(--muted); }
 .project-link--secondary:hover { color: var(--ink); }
 
@@ -1053,7 +1133,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
   margin: 8px 0 0;
   font-size: 11px;
   line-height: 1.55;
-  color: #4b5566;
+  color: var(--text-2);
 }
 
 .channels { display: grid; gap: 12px; margin: 22px 0 0; }
@@ -1070,7 +1150,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
   transition: border-color var(--t-fast) var(--ease), transform var(--t-base) var(--ease);
 }
 
-.channel:hover { border-color: #ded3c3; transform: translateY(-1px); }
+.channel:hover { border-color: var(--border-strong); transform: translateY(-1px); }
 
 .channel__icon {
   display: inline-flex;
@@ -1084,7 +1164,7 @@ body:has(#contact:target) .site-nav__link[data-section="contact"] {
   color: var(--purple);
 }
 
-.channel__icon--orange { background: #fdf1e7; color: var(--orange); }
+.channel__icon--orange { background: var(--tint-orange); color: var(--orange); }
 
 .channel__body { display: grid; gap: 3px; min-width: 0; }
 
@@ -1127,7 +1207,7 @@ a.channel__value:hover { color: var(--purple); }
   transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
 
-.copy-btn:hover { color: #5b21b6; border-color: var(--purple); }
+.copy-btn:hover { color: var(--purple-deep); border-color: var(--purple); }
 
 .copy-btn:focus-visible {
   outline: 2px solid var(--purple);
@@ -1170,14 +1250,14 @@ a.channel__value:hover { color: var(--purple); }
   transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
 }
 
-.field__control::placeholder { color: #8b95a7; }
+.field__control::placeholder { color: var(--faint); }
 
-.field__control:hover { border-color: #a9aeb8; }
+.field__control:hover { border-color: var(--border-soft); }
 
 .field__control:focus {
   outline: none;
   border-color: var(--purple);
-  box-shadow: 0 0 0 3px rgba(109, 40, 217, 0.14);
+  box-shadow: var(--ring);
 }
 
 .field__control--area {
@@ -1211,11 +1291,11 @@ a.channel__value:hover { color: var(--purple); }
    HTML-native behaviour: no script is listening for input events. */
 .field:has(.field__error.is-error) .field__control {
   border-color: var(--danger);
-  background: #fdf7f6;
+  background: var(--tint-danger-field);
 }
 
 .field:has(.field__error.is-error) .field__control:focus {
-  box-shadow: 0 0 0 3px rgba(192, 57, 47, 0.14);
+  box-shadow: var(--ring-danger);
 }
 
 .field__error {
@@ -1269,19 +1349,19 @@ a.channel__value:hover { color: var(--purple); }
   line-height: 1.5;
 }
 
-.form-result.is-success { border-color: #cdeedb; background: #f2fbf6; }
-.form-result.is-error { border-color: #f0d8d4; background: #fdf6f5; }
+.form-result.is-success { border-color: var(--tint-success-line); background: var(--tint-success); }
+.form-result.is-error { border-color: var(--tint-danger-line); background: var(--tint-danger); }
 
 .form-result__icon { flex: none; margin-top: 1px; }
-.form-result.is-success .form-result__icon { color: #1f9d55; }
+.form-result.is-success .form-result__icon { color: var(--green); }
 .form-result.is-error .form-result__icon { color: var(--danger); }
 
 .form-result__body { display: grid; gap: 4px; }
 
 .form-result__title { color: var(--ink); font-size: 11px; font-weight: 700; }
-.form-result__detail { color: #4b5566; }
+.form-result__detail { color: var(--text-2); }
 
-.form-result__list { display: grid; gap: 3px; color: #6b4440; }
+.form-result__list { display: grid; gap: 3px; color: var(--danger-ink); }
 .form-result__list li { list-style: disc; margin-left: 14px; }
 
 /* --------------------------------------------------------------------------
@@ -1309,7 +1389,7 @@ a.channel__value:hover { color: var(--purple); }
   gap: 20px;
   margin: 0 auto;
   font-size: 9px;
-  color: #3f4757;
+  color: var(--text-3);
 }
 
 .site-footer__nav a { transition: color var(--t-fast) var(--ease); }
@@ -1332,7 +1412,7 @@ a.channel__value:hover { color: var(--purple); }
               transform var(--t-base) var(--ease), opacity var(--t-base) var(--ease);
 }
 
-.to-top:hover { color: var(--purple); border-color: #ded3c3; transform: translateY(-1px); }
+.to-top:hover { color: var(--purple); border-color: var(--border-strong); transform: translateY(-1px); }
 
 .to-top:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 
@@ -1461,7 +1541,98 @@ a.channel__value:hover { color: var(--purple); }
 }
 
 /* --------------------------------------------------------------------------
-   14. Reduced motion
+   14. Dark theme
+   --------------------------------------------------------------------------
+
+   The toggle in the header is a checkbox, so "dark" is simply the state of that
+   checkbox, reached with :has() rather than a class or a script:
+
+       body:has(#theme-toggle:checked) { ...token overrides... }
+
+   Overriding custom properties on <body> is enough: they inherit, and the
+   component rules below reference the tokens, not literal colours, so every
+   surface, border, tint and shadow re-tints from this one block.
+
+   Why the tokens, not a second stylesheet: the light sheet had 32 hardcoded hex
+   values and 7 hardcoded rgba() calls scattered through it. Those are now tokens
+   (section 1), which is what makes a second theme possible without duplicating
+   1,500 lines.
+
+   Deliberate trade-off: there is no localStorage, so the choice resets to light
+   on the next full page load. That is a real cost — ?filter= links and the
+   contact form's Post/Redirect/Get both reload — accepted here to keep the
+   "no custom JavaScript" constraint intact. The site is otherwise a single page
+   with anchor navigation, so the theme holds for a whole reading session.
+
+   Colour choices: surfaces step down rather than invert, the purple is lifted to
+   a lighter tint so it keeps contrast against a dark background, and text sits
+   at 4.5:1 or better against the surface it is used on.
+   -------------------------------------------------------------------------- */
+
+body:has(#theme-toggle:checked) {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --surface: #10131a;
+  --warm: #171b24;
+  --purple-tint: #1c1730;
+  --purple-tint-2: #241d3c;
+
+  /* Text */
+  --ink: #f1f3f8;
+  --body: #c2c9d6;
+  --text-2: #b0b8c6;
+  --text-3: #b4bcc9;
+  --text-4: #aab3c2;
+  --muted: #8d99ad;
+  /* Lifted to 4.93:1 so input placeholders clear WCAG AA. The light-theme value (#8b95a7 on
+     white) is only 3.02:1, which is a pre-existing shortfall rather than something this
+     theme introduced. */
+  --faint: #7b8494;
+
+  /* Borders */
+  --border: #262c38;
+  --border-input: #39414f;
+  --border-soft: #4a5262;
+  --border-strong: #3d4553;
+
+  /* Accents, lifted for contrast on dark */
+  --purple: #a78bfa;
+  --purple-2: #c4b5fd;
+  --purple-rgb: 167, 139, 250;
+  --purple-deep: #ddd6fe;
+  --purple-ink: #c4b5fd;
+  --coral: #f08a76;
+  --coral-rgb: 240, 138, 118;
+  --green: #34d399;
+  --success: #4ade80;
+  --danger: #f87171;
+  --danger-rgb: 248, 113, 113;
+  --danger-ink: #fca5a5;
+  --orange: #fbbf24;
+
+  /* Text on a filled accent is now dark, because the accents are light. */
+  --on-accent: #14121c;
+
+  /* Tinted state backgrounds become dark washes, not pale washes. */
+  --tint-orange: #2a1f12;
+  --tint-success: #10261a;
+  --tint-success-line: #1d4a30;
+  --tint-danger: #2a1518;
+  --tint-danger-line: #4d2126;
+  --tint-danger-field: #241316;
+
+  /* The status panel sits over the hero photograph, so it must stay translucent
+     and legible against a photo rather than go fully opaque. */
+  --overlay: rgba(16, 19, 26, 0.82);
+
+  /* Shadows go deeper instead of softer, and the purple CTA glow needs room. */
+  --shadow-rgb: 0, 0, 0;
+  --grad-mid: #7c5cd6;
+}
+
+/* --------------------------------------------------------------------------
+   15. Reduced motion
    -------------------------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
