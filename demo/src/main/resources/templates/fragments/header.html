@@ -4,10 +4,19 @@
 <!--
   Sticky site header.
   Desktop: FH mark + identity | centred pill nav | gradient "Get in touch" CTA
-  Mobile:  FH mark + identity | "Get in touch" | hamburger that opens a drawer
+  Mobile:  FH mark + identity | "Get in touch" | a checkbox that opens the drawer
+
+  The drawer used to be a <button> plus a JS class toggle. It is now a real checkbox and its
+  <label>, because that is the one way to get open/close behaviour with no JavaScript at all:
+  the browser does the toggling and the screen reader announces the state natively. On desktop
+  the checkbox is display:none and the nav is always shown, so the control costs nothing there.
+
+  What is lost: the drawer no longer closes itself when you tap a link, and it no longer closes
+  on Escape or on an outside click. A full-viewport <label> behind it covers tap-outside, and the
+  toggle itself stays reachable, but there is no keyboard Escape handler without a script.
 -->
 
-<header th:fragment="siteHeader" class="site-header" id="site-header" data-site-header>
+<header th:fragment="siteHeader" class="site-header" id="site-header">
   <div class="container site-header__inner">
 
     <a class="brand" href="#top" th:attr="aria-label=${ownerName} + ' — back to top'">
@@ -17,6 +26,14 @@
         <span class="brand__role" th:text="${ownerRole}">Java Developer</span>
       </span>
     </a>
+
+    <!--
+      The drawer state lives in a real checkbox, placed here so it is a preceding sibling of
+      .site-nav: #nav-toggle:checked ~ .site-nav is what opens the drawer. It is a zero-size
+      visually-hidden control, so it costs no layout, and the <label> that drives it sits in
+      .site-header__actions where the button visually belongs.
+    -->
+    <input type="checkbox" id="nav-toggle" class="nav-toggle-input" aria-controls="site-nav">
 
     <nav class="site-nav" id="site-nav" aria-label="Primary">
       <ul class="site-nav__list" data-nav-list>
@@ -34,15 +51,15 @@
         <span th:insert="~{fragments/icon :: icon('arrow-right', 14)}"></span>
       </a>
 
-      <button class="nav-toggle" type="button"
-              data-nav-toggle
-              aria-expanded="false" aria-controls="site-nav" aria-label="Open navigation menu">
-        <span class="nav-toggle__icon" th:insert="~{fragments/icon :: icon('menu', 20)}" data-nav-icon-open></span>
-        <span class="nav-toggle__icon is-hidden" th:insert="~{fragments/icon :: icon('close', 20)}" data-nav-icon-close></span>
-      </button>
+      <label class="nav-toggle" for="nav-toggle" aria-label="Toggle navigation menu">
+        <span class="nav-toggle__icon" th:insert="~{fragments/icon :: icon('menu', 20)}"></span>
+      </label>
     </div>
 
   </div>
+
+  <!-- Tap-outside backdrop. A label for the same checkbox, so tapping it closes the drawer. -->
+  <label class="nav-scrim" for="nav-toggle" aria-hidden="true"></label>
 </header>
 
 </html>

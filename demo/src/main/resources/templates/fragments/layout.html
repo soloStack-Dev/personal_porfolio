@@ -29,14 +29,18 @@
 <body>
 
 <th:block th:fragment="scripts">
-  <!-- htmx powers the 04 / DIALOGUE form. If this fails to load the form still works:
-       the <form> has a real action/method, so it degrades to a normal POST. -->
-  <script defer src="https://unpkg.com/htmx.org@2/dist/htmx.min.js"></script>
-  <script defer th:src="@{/js/site.js}"></script>
-</th:block>
+  <!--
+    htmx is the only script on the page. It is not decoration: the 04 / DIALOGUE form uses it to
+    swap the small result fragment in place. There is no site.js — everything the page used to
+    do in the browser is now server-rendered markup or plain CSS, so if this fails to load, or
+    the visitor blocks it, the form still submits with a normal POST and the whole page works.
 
-<!-- Toast host, kept outside the sections so section swaps can never remove it. -->
-<div th:fragment="toast-host" id="toast-host" class="toast-host" role="status" aria-live="polite"></div>
+    The toast system went with site.js. It duplicated what #contact-result already announced
+    through role="status" / role="alert", so removing it removed a redundant second channel
+    rather than the only one.
+  -->
+  <script defer src="https://unpkg.com/htmx.org@2/dist/htmx.min.js"></script>
+</th:block>
 
 </body>
 

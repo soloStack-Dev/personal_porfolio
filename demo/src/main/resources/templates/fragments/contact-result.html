@@ -8,8 +8,11 @@
     outcome(state, delivery, errors) -> returned to htmx, and additionally out-of-band swaps
                                         the four per-field error slots
 
-  Keeping the alert markup in a single fragment is what makes the JS and no-JS paths look
-  identical.
+  Keeping the alert markup in a single fragment is what makes both paths look identical.
+
+  aria-busy is rendered as "false" because this fragment only ever contains a finished result.
+  While the request is in flight htmx sets aria-busy="true" on the swap target itself and clears
+  it afterwards, so no script of ours is needed to maintain it.
 
   Style switch is a single-word modifier class (is-success / is-error) rather than a
   multi-word class list: Thymeleaf tokenises expression values on whitespace, so a string
@@ -19,6 +22,7 @@
 <div th:fragment="alert(state, delivery, errors)"
      id="contact-result"
      class="form-result"
+     aria-busy="false"
      th:classappend="${state == 'success' ? 'is-success' : (state == 'error' ? 'is-error' : 'is-idle')}"
      th:hidden="${state == null}"
      th:role="${state == 'error' ? 'alert' : 'status'}"

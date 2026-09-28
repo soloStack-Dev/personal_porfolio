@@ -78,18 +78,67 @@ class PortfolioPageTests {
                 .andExpect(content().string(Matchers.containsString(
                         "href=\"https://www.linkedin.com/in/faleel-h-b772a1416\"")))
                 .andExpect(content().string(Matchers.containsString("rel=\"noopener noreferrer\"")))
-                // Nothing is left as a dead placeholder for the links we do have.
-                .andExpect(content().string(Matchers.not(
-                        Matchers.containsString("data-placeholder-link=\"Source Repository\""))));
+                // Every project link is a real anchor, and the Résumé — the one link with no
+                // destination — is a <span> in the hero, not a dead href="#" and not a button
+                // that only admits it when clicked. No data-* hook is left for a script to find.
+                .andExpect(content().string(Matchers.not(Matchers.containsString("data-placeholder-link"))))
+                .andExpect(content().string(Matchers.containsString("class=\"link-action link-action--unavailable\"")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("data-copy"))))
+                .andExpect(content().string(Matchers.containsString("mailto:faleelmr4@gmail.com")))
+                .andExpect(content().string(Matchers.containsString("not available yet")));
     }
 
     @Test
-    void indexExposesContentTheClientSideFilterNeeds() throws Exception {
+    void projectFilterPillsAreLinksAndTheServerDoesTheFiltering() throws Exception {
+        // No script needs to exist for this to work, so the filter is plain links plus a
+        // server-side selection: the pills are anchors, the active one is marked for assistive
+        // tech, and the count is real text in the response rather than a JS-written string.
         mvc.perform(get("/"))
-                .andExpect(model().attributeExists("projects", "filters", "expertise", "stats", "channels"))
-                .andExpect(content().string(Matchers.containsString("data-filters=\"ai\"")))
-                .andExpect(content().string(Matchers.containsString("data-filters=\"webapp\"")))
-                .andExpect(content().string(Matchers.containsString("aria-pressed=\"true\"")));
+                .andExpect(model().attributeExists(
+                        "projects", "filters", "activeFilterId", "activeFilterLabel",
+                        "projectCount", "projectCountLabel"))
+                .andExpect(model().attribute("activeFilterId", "all"))
+                .andExpect(content().string(Matchers.containsString("href=\"/?filter=ai\"")))
+                .andExpect(content().string(Matchers.containsString("aria-current=\"true\"")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("aria-pressed"))))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("data-filter="))))
+                .andExpect(content().string(Matchers.containsString("2 projects · All")));
+    }
+
+    @Test
+    void filteringByCategoryReturnsOnlyTheMatchingCards() throws Exception {
+        // ?filter=ai must narrow the response itself, not merely mark a pill: only the RAG
+        // project survives, and the status line reports one project. This is the regression
+        // that would catch the filter being re-implemented on the client.
+        mvc.perform(get("/").param("filter", "ai"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("activeFilterId", "ai"))
+                .andExpect(model().attribute("projectCount", 1))
+                .andExpect(content().string(Matchers.containsString("1 project ·")))
+                .andExpect(content().string(Matchers.containsString("rag-enterprise")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("data-entry-management"))));
+    }
+
+    @Test
+    void anUnknownFilterFallsBackToShowingEverything() throws Exception {
+        // A stale bookmark or a hand-edited URL must not render an empty page.
+        mvc.perform(get("/").param("filter", "no-such-filter"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("activeFilterId", "all"))
+                .andExpect(model().attribute("projectCount", 2))
+                .andExpect(content().string(Matchers.containsString("2 projects · All")));
+    }
+
+    @Test
+    void theCustomJavaScriptIsGoneAndOnlyHtmxRemains() throws Exception {
+        // The whole point of the refactor: no site.js is referenced, and the only script left
+        // is htmx, which the contact form degrades from without. Asserting on the URL rather
+        // than the bare name, because the templates document the removal in a comment.
+        mvc.perform(get("/"))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("/js/site.js"))))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("id=\"toast-host\""))))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("data-to-top"))))
+                .andExpect(content().string(Matchers.containsString("htmx.org")));
     }
 
     @Test
@@ -201,21 +250,29 @@ class PortfolioPageTests {
     }
 
     @Test
-    void theNavToggleSurvivesFragmentInclusion() throws Exception {
-        // Regression guard. th:replace on an icon include deletes the host <span>, which
-        // silently threw away class="is-hidden" and the data-nav-icon-* hooks. The result was
-        // two glyphs (hamburger AND cross) stuck side by side in the mobile menu button, and
-        // site.js found null for both icons so the open/close swap never happened.
+    void theMobileDrawerIsACheckboxDrivenByCssNotByAScript() throws Exception {
+        // The drawer used to be a <button> plus a JS class toggle, and a second <span> glyph
+        // that JS swapped in and out. It is now a real checkbox: the browser does the toggling
+        // and the state is announced natively. The two things that matter structurally are
+        // that the input is a preceding sibling of .site-nav (the CSS depends on
+        // #nav-toggle:checked ~ .site-nav) and that there is only ever one glyph in the toggle.
         String html = mvc.perform(get("/")).andReturn().getResponse().getContentAsString();
 
         assertThat(html)
-                .contains("data-nav-icon-open")
-                .contains("data-nav-icon-close")
-                .contains("class=\"nav-toggle__icon is-hidden\"")
-                // The templates are fully evaluated: no unprocessed th:* attribute may leak
-                // into the response, which is what would happen if an include went wrong.
+                .contains("id=\"nav-toggle\"")
+                .contains("class=\"nav-toggle-input\"")
+                .contains("aria-controls=\"site-nav\"")
+                .contains("class=\"nav-toggle\"")
+                // The old JS-only hooks must be gone, and with them the duplicate-icon bug.
+                .doesNotContain("data-nav-icon-open")
+                .doesNotContain("data-nav-icon-close")
+                .doesNotContain("nav-toggle__icon is-hidden")
                 .doesNotContain("th:insert")
                 .doesNotContain("th:replace");
+
+        assertThat(html.indexOf("id=\"nav-toggle\""))
+                .as("the checkbox must precede .site-nav for the ~ sibling selector to work")
+                .isLessThan(html.indexOf("id=\"site-nav\""));
     }
 
     @Test

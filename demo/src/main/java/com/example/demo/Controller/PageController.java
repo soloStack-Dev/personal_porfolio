@@ -1,13 +1,17 @@
 package com.example.demo.Controller;
 
 import com.example.demo.Model.ContactForm;
+import com.example.demo.Model.FilterOption;
+import com.example.demo.Model.Project;
 import com.example.demo.Service.PortfolioService;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * Serves the single server-rendered page. Everything else on the page is a Thymeleaf fragment.
@@ -22,12 +26,23 @@ public class PageController {
     }
 
     @GetMapping("/")
-    public String index(Model model) {
+    public String index(Model model, @RequestParam(name = "filter", required = false) String filter) {
+
+        // The 03 / PORTFOLIO filter is a query parameter, not a client-side toggle. The set of
+        // cards that ships in the response is already the filtered one, which is why the pills
+        // work as plain links and why /?filter=ai is shareable and survives a reload.
+        FilterOption activeFilter = portfolio.resolveFilter(filter);
+        List<Project> projects = portfolio.projectsFor(activeFilter.id());
+
         model.addAttribute("stats", portfolio.stats());
         model.addAttribute("infoColumns", portfolio.infoColumns());
         model.addAttribute("expertise", portfolio.expertise());
         model.addAttribute("filters", portfolio.projectFilters());
-        model.addAttribute("projects", portfolio.projects());
+        model.addAttribute("activeFilterId", activeFilter.id());
+        model.addAttribute("activeFilterLabel", activeFilter.label());
+        model.addAttribute("projects", projects);
+        model.addAttribute("projectCount", projects.size());
+        model.addAttribute("projectCountLabel", projects.size() == 1 ? "project" : "projects");
         model.addAttribute("channels", portfolio.contactChannels());
         model.addAttribute("topics", portfolio.topics());
 

@@ -51,11 +51,16 @@
           </li>
         </ul>
 
-        <button class="copy-btn" type="button"
-                th:attr="data-copy=${ownerEmail},aria-label='Copy ' + ${ownerEmail} + ' to the clipboard'">
-          <span th:insert="~{fragments/icon :: icon('copy', 11)}"></span>
-          Copy email address
-        </button>
+        <!--
+          Was a button that called navigator.clipboard.writeText and then showed a toast. A
+          server cannot reach a visitor's clipboard, so the honest no-script equivalent is a
+          mailto: — same intent (get the address into your mail client) and it is a real link,
+          so it can be copied, middle-clicked, and opened by any client.
+        -->
+        <a class="copy-btn" th:href="'mailto:' + ${ownerEmail}">
+          <span th:insert="~{fragments/icon :: icon('mail', 11)}"></span>
+          Email me directly
+        </a>
       </aside>
 
       <!-- ── Right: the form ────────────────────────────────────────────── -->

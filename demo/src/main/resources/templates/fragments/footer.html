@@ -21,9 +21,16 @@
 
     <p class="site-footer__copy">&copy; <span th:text="${currentYear}">2026</span> <span th:text="${ownerName}">Faleel H</span>. All rights reserved.</p>
 
-    <button class="to-top" type="button" data-to-top aria-label="Back to top">
+    <!--
+      An anchor, not a button. It was a <button> plus a scroll listener that only revealed it
+      past 320px; an <a href="#top"> does the same job with no script, and the smooth scroll is
+      already handled by `html { scroll-behavior: smooth }`, which the reduced-motion block
+      switches off. Losing the reveal means it is always visible, which is a fair trade for
+      working without JavaScript.
+    -->
+    <a class="to-top" href="#top" aria-label="Back to top">
       <span th:insert="~{fragments/icon :: icon('arrow-up', 13)}"></span>
-    </button>
+    </a>
 
   </div>
 </footer>

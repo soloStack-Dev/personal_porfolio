@@ -40,10 +40,16 @@
 
         <a class="btn btn--outline" href="#contact">Let's Talk</a>
 
-        <button class="link-action" type="button" data-placeholder-link="Résumé (PDF)">
+        <!--
+          The résumé has no URL yet. Rendered as an inert element that looks like a link and
+          carries "not available yet" for assistive tech, rather than an <a href="#"> that goes
+          nowhere or a button that only admits it when clicked.
+        -->
+        <span class="link-action link-action--unavailable">
           <span th:insert="~{fragments/icon :: icon('cap', 15)}"></span>
           Resume
-        </button>
+          <span class="visually-hidden"> — not available yet</span>
+        </span>
       </div>
 
       <div class="connect">

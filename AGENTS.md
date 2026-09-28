@@ -13,7 +13,7 @@ Use the wrapper, not a system `mvn`:
 
 ```powershell
 .\mvnw.cmd spring-boot:run      # dev server, http://localhost:8080 (devtools live-reloads on classpath change)
-.\mvnw.cmd test                 # PortfolioPageTests (16) + DemoApplicationTests (1)
+.\mvnw.cmd test                 # PortfolioPageTests (21) + DemoApplicationTests (1)
 .\mvnw.cmd test -Dtest=PortfolioPageTests
 .\mvnw.cmd package              # produces the runnable jar in target/
 ```
@@ -79,11 +79,32 @@ and config file **BOM-free UTF-8**. If `docker compose build` fails on an illega
 
 `spring-boot-starter-thymeleaf` is the only view layer. `src/main/resources/templates/` holds
 `index.html` plus `fragments/` (header, hero, about, skills, projects, contact, footer, and the
-htmx `contact-result :: outcome` fragment); `src/main/resources/static/` holds `css/site.css`,
-`js/site.js`, and `img/`. Templates and fragments go in `templates/`, CSS/JS/images in `static/`.
+htmx `contact-result :: outcome` fragment); `src/main/resources/static/` holds `css/site.css` and
+`img/`. Templates and fragments go in `templates/`, CSS/images in `static/`.
 The hero photograph is `static/img/faleelimg.jpeg` (3:4, cropped into the square card with
 `object-position: center 25%`); the abstract SVG placeholder that used to sit there is deleted and a
 test asserts neither it nor the word "placeholder" returns.
+
+**There is no custom JavaScript in this project, and that is a deliberate design constraint.**
+`static/js/site.js` was deleted; the htmx CDN script in `fragments/layout.html` is the only `<script>`
+on the page and exists solely to swap the contact result fragment in. Everything `site.js` used to do
+is now server-rendered or pure CSS:
+
+| Used to be JS | Is now |
+| --- | --- |
+| Project category filter | `?filter=<id>` → `PageController` → `PortfolioService.projectsFor`; pills are `<a>` |
+| Mobile drawer button + class swap | `input#nav-toggle` checkbox + `<label>`, opened by `#nav-toggle:checked ~ .site-nav` |
+| Active nav link via `IntersectionObserver` | `body:has(#section:target) .site-nav__link[data-section=…]` |
+| `data-to-top` reveal + smooth scroll | plain `<a href="#top">` + `html { scroll-behavior: smooth }` |
+| `navigator.clipboard` copy-email button | `mailto:` link |
+| `data-placeholder-link` click-to-confess button | inert `<span>` + visually-hidden "not available yet" |
+| Toast host | removed; `#contact-result` already announces via `role="status"` / `role="alert"` |
+| Sticky-header `is-stuck` class | unconditional `box-shadow` |
+
+If you add behaviour, prefer a controller method, a model attribute, or a CSS selector. Before
+reintroducing a `<script>`, note what is deliberately lost: the drawer no longer closes on Escape or
+on an outside click (tap-outside is a full-viewport `<label>`, which does not cover keyboard), nav
+highlighting follows navigation rather than scroll position, and toasts are gone.
 
 **All page copy lives in `PortfolioService`, not in the templates.** It was rewritten with the
 site owner's real details (Faleel H, Java developer, BCA graduate). `OWNER_NAME`, `OWNER_ROLE`,
@@ -194,10 +215,13 @@ These are called out explicitly in the `Context/` files and are easy to violate 
   feature-list lengths (`.project__features` is height-capped with internal scroll for this).
 - Never invent metrics. The 01 / FOUNDATION stats are real (CGPA 7.58, 2 projects, 10+
   technologies, Java 21) and must stay that way. GitHub (`soloStack-Dev`), LinkedIn
-  (`faleel-h-b772a1416`), and the two Source Repository links are real anchors. Résumé is
-  the only remaining `data-placeholder-link` button — wire it up rather than deleting it.
+  (`faleel-h-b772a1416`), and the two Source Repository links are real anchors. The Résumé is the
+  only link with no destination: it renders as an inert `<span>` with visually-hidden
+  "not available yet", so give it a real URL rather than deleting the element.
 - Required + email validation, loading, success, and error states are all required on the
   contact form. `Subject` is the label for the `topic` field; keep the field name `topic` so the
-  `err-topic` OOB swap target stays in sync.
+  `err-topic` OOB swap target stays in sync. Validation settles on submit only — with no script
+  listening for input events that is the native behaviour, and `.is-error` arrives from the
+  server (Post/Redirect/Get render or htmx out-of-band swap).
 - Accessibility is in scope: semantic HTML, heading hierarchy, keyboard nav, visible focus, alt
   text on the hero photo, icons never the sole carrier of an action, and reduced-motion support.

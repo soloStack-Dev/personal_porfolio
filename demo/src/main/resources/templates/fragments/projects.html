@@ -3,7 +3,11 @@
 
 <!--
   03 / PORTFOLIO — heading + category filter on one row, then a 2x2 card grid.
-  Filtering is client-side (see static/js/site.js) and degrades to "all cards visible" without JS.
+
+  Filtering is server-side: the pills are links to /?filter=<id>, and the handler sends back
+  only the matching cards. Nothing is hidden and re-shown in the browser, so the filter works
+  with JavaScript disabled, the count in .filter__status is real, and a filtered view can be
+  bookmarked or shared.
 -->
 
 <section th:fragment="projects" class="section section--warm" id="projects" aria-labelledby="projects-title">
@@ -22,20 +26,29 @@
         </p>
       </div>
 
+      <!--
+        Plain links, not buttons. A pill is a navigation target like any other, so it should be
+        an <a>: middle-click, open-in-new-tab, copy-link and the back button all work, and the
+        browser shows the destination in the status bar.
+
+        ?filter= is not a URL fragment on purpose: the fragment (#projects) is the part that
+        scrolls, the query is the part that selects.
+      -->
       <div class="filter" role="group" aria-label="Filter projects by category">
-        <button class="filter__pill is-active" type="button"
-                th:each="option : ${filters}"
-                th:attr="data-filter=${option.id}, aria-pressed=${option.id == 'all'}">
-          <span th:text="${option.label}">All</span>
-        </button>
+        <a class="filter__pill" th:each="option : ${filters}"
+           th:classappend="${option.id == activeFilterId} ? 'is-active'"
+           th:href="@{/(filter=${option.id})}"
+           th:attr="aria-current=${option.id == activeFilterId} ? 'true' : null"
+           th:text="${option.label}">All</a>
       </div>
     </header>
 
-    <p class="filter__status" data-filter-status role="status" aria-live="polite"></p>
+    <!-- Server-computed, so it is correct on first paint and readable by assistive tech. -->
+    <p class="filter__status" role="status"
+       th:text="${projectCount} + ' ' + ${projectCountLabel} + ' · ' + ${activeFilterLabel}">2 projects · All</p>
 
-    <ul class="projects" data-project-grid>
-      <li class="card project" th:each="project : ${projects}"
-          th:attr="data-filters=${#strings.listJoin(project.filters, ' ')}">
+    <ul class="projects">
+      <li class="card project" th:each="project : ${projects}">
 
         <p class="project__meta">
           <span class="chip" th:text="${project.category}">Cloud / Infra</span>
@@ -61,15 +74,22 @@
 
         <ul class="project__links">
           <li th:each="link : ${project.links}">
-            <!-- Real URL: a plain anchor. No URL yet: a button that explains itself. -->
-            <a class="project-link" th:if="${link.href != null}"
+            <!--
+              Real URL: a plain anchor that opens in a new tab.
+              No URL: not a dead <a href="#"> and not a button that needs a click to confess.
+              The server knows there is nothing to link to, so it renders an inert element that
+              looks like a link, is skipped by the tab order, and says "not available yet" —
+              including to a screen reader, via the visually-hidden suffix.
+            -->
+            <a class="project-link" th:if="${link.available}"
                th:classappend="'project-link--' + ${link.tone}"
                th:href="${link.href}" th:text="${link.label}"
                target="_blank" rel="noopener noreferrer">Source Repository</a>
-            <button class="project-link" type="button" th:unless="${link.href != null}"
-                    th:classappend="'project-link--' + ${link.tone}"
-                    th:attr="data-placeholder-link=${link.label}"
-                    th:text="${link.label}">Source Repository</button>
+            <span class="project-link project-link--unavailable" th:unless="${link.available}"
+                  th:classappend="'project-link--' + ${link.tone}">
+              <span th:text="${link.label}">Résumé (PDF)</span>
+              <span class="visually-hidden"> — not available yet</span>
+            </span>
             <span class="project-link__icon"
                   th:insert="~{fragments/icon :: icon(${link.icon}, 12)}"></span>
           </li>

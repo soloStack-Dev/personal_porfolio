@@ -27,6 +27,9 @@ public class PortfolioService {
     public static final String OWNER_GITHUB = "https://github.com/soloStack-Dev";
     public static final String OWNER_LINKEDIN = "https://www.linkedin.com/in/faleel-h-b772a1416";
 
+    /** Id of the "All" pill in 03 / PORTFOLIO, and the default for {@code ?filter=}. */
+    public static final String FILTER_ALL = "all";
+
     public List<Stat> stats() {
         return List.of(
                 new Stat("7.58", "/10", "CGPA", "BCA — Bharath College of Science & Management."),
@@ -89,7 +92,49 @@ public class PortfolioService {
                 new FilterOption("webapp", "Web Applications"));
     }
 
+    /**
+     * Resolves an untrusted {@code ?filter=} value to a real option.
+     *
+     * <p>The value arrives straight from the query string, so it is never interpolated into a
+     * lookup without checking: an unknown id falls back to {@link #FILTER_ALL}. That is what
+     * keeps {@code /?filter=../../etc/passwd} and friends behaving exactly like {@code /}.
+     */
+    public FilterOption resolveFilter(String requestedId) {
+        if (requestedId == null) {
+            return filterById(FILTER_ALL);
+        }
+        return projectFilters().stream()
+                .filter(option -> option.id().equals(requestedId))
+                .findFirst()
+                .orElseGet(() -> filterById(FILTER_ALL));
+    }
+
+    private static FilterOption filterById(String id) {
+        return new FilterOption(id, "All");
+    }
+
+    /** Every project, ignoring the filter. */
     public List<Project> projects() {
+        return allProjects();
+    }
+
+    /**
+     * The projects matching one filter pill.
+     *
+     * <p>Used to be a client-side loop that hid and unhid already-rendered cards. Doing it here
+     * means the page arrives with the right cards in it, so the filter works with no JavaScript
+     * at all and the selection survives a reload, a bookmark, or a shared link.
+     */
+    public List<Project> projectsFor(String filterId) {
+        if (FILTER_ALL.equals(filterId)) {
+            return allProjects();
+        }
+        return allProjects().stream()
+                .filter(project -> project.filters().contains(filterId))
+                .toList();
+    }
+
+    private List<Project> allProjects() {
         return List.of(
                 new Project(
                         "rag-enterprise",

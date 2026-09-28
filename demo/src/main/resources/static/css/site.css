@@ -307,10 +307,8 @@ button { cursor: pointer; background: none; border: 0; }
   z-index: 40;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  transition: box-shadow var(--t-base) var(--ease);
+  box-shadow: 0 6px 20px -16px rgba(11, 15, 25, 0.5);
 }
-
-.site-header.is-stuck { box-shadow: 0 6px 20px -16px rgba(11, 15, 25, 0.5); }
 
 .site-header__inner {
   display: flex;
@@ -379,13 +377,38 @@ button { cursor: pointer; background: none; border: 0; }
 
 .site-nav__link:hover { color: var(--ink); }
 
-.site-nav__link.is-active {
+/* Active section, with no IntersectionObserver.
+   There is no scroll listener any more, so the highlight can only follow where you actually
+   are: the section you jumped to is :target, and :has() lets that state reach back up to the
+   header. One rule per section. It highlights on navigation rather than continuously while
+   scrolling, which is the honest trade for having no script. */
+body:has(#top:target) .site-nav__link[data-section="top"],
+body:has(#about:target) .site-nav__link[data-section="about"],
+body:has(#skills:target) .site-nav__link[data-section="skills"],
+body:has(#projects:target) .site-nav__link[data-section="projects"],
+body:has(#contact:target) .site-nav__link[data-section="contact"] {
   background: var(--purple);
   color: #fff;
   font-weight: 600;
 }
 
 .site-header__actions { display: flex; align-items: center; gap: 10px; }
+
+/* The drawer state: a real checkbox, visually hidden but still focusable and still announced
+   by screen readers, plus the <label> that paints the button. It must be a preceding sibling
+   of .site-nav, which is why the input sits in the header markup before the nav. */
+.nav-toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
 
 .nav-toggle {
   display: none;
@@ -397,17 +420,24 @@ button { cursor: pointer; background: none; border: 0; }
   border-radius: 10px;
   background: var(--surface);
   color: var(--ink);
+  cursor: pointer;
 }
 
-/* One glyph per wrapper. The wrapper is what carries .is-hidden and the data-nav-icon-*
-   hooks, so it must stay in the DOM — hence th:insert in the markup, never th:replace.
-   display:inline-flex keeps the 20x20 <svg> optically centred inside the 38px button
-   instead of sitting on the text baseline. */
+/* Focus lives on the hidden input, so the ring has to be painted on its label. */
+.nav-toggle-input:focus-visible ~ .site-header__actions .nav-toggle {
+  outline: 2px solid var(--purple);
+  outline-offset: 2px;
+}
+
 .nav-toggle__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
+
+/* Backdrop behind the open drawer, so a tap outside closes it. Hidden when the drawer is shut,
+   and on desktop where there is no drawer at all. */
+.nav-scrim { display: none; }
 
 /* --------------------------------------------------------------------------
    5. Hero
@@ -828,18 +858,23 @@ button { cursor: pointer; background: none; border: 0; }
   background: var(--surface);
 }
 
+/* Now an <a>, not a <button>: reset the button chrome and underline-free link styling. */
 .filter__pill {
+  display: inline-flex;
+  align-items: center;
   height: 22px;
   padding: 0 12px;
   border-radius: 14px;
   color: #5b4b7a;
   font-size: 10.5px;
   font-weight: 500;
+  text-decoration: none;
   white-space: nowrap;
   transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
 }
 
 .filter__pill:hover { color: var(--purple); }
+.filter__pill:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 
 .filter__pill.is-active {
   background: var(--purple);
@@ -1172,7 +1207,8 @@ a.channel__value:hover { color: var(--purple); }
 
 /* Field-level validation driven purely by DOM state — no extra swapping needed.
    .is-error is added by the server on the Post/Redirect/Get render and swapped in
-   out-of-band by the htmx response; site.js maintains it on live input. */
+   out-of-band by the htmx response. Validation now only settles on submit, which is the
+   HTML-native behaviour: no script is listening for input events. */
 .field:has(.field__error.is-error) .field__control {
   border-color: var(--danger);
   background: #fdf7f6;
@@ -1298,48 +1334,42 @@ a.channel__value:hover { color: var(--purple); }
 
 .to-top:hover { color: var(--purple); border-color: #ded3c3; transform: translateY(-1px); }
 
-/* Reveal only once the page has actually scrolled. */
-.to-top { opacity: 0; visibility: hidden; }
-.to-top.is-visible { opacity: 1; visibility: visible; }
+.to-top:focus-visible { outline: 2px solid var(--purple); outline-offset: 2px; }
 
 /* --------------------------------------------------------------------------
-   12. Toasts
+   12. Visually hidden
    -------------------------------------------------------------------------- */
 
-.toast-host {
-  position: fixed;
-  z-index: 60;
-  left: 50%;
-  bottom: 22px;
-  display: grid;
-  gap: 8px;
-  width: min(360px, calc(100% - 32px));
-  transform: translateX(-50%);
-  pointer-events: none;
+/* Content that must reach a screen reader but not the eye. Used to say "not available yet"
+   next to links that have no destination, and anywhere else an inline explanation is needed. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
-.toast {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 11px 14px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-  box-shadow: var(--shadow-lift);
-  color: var(--ink);
-  font-size: 11.5px;
-  line-height: 1.45;
-  animation: toast-in var(--t-base) var(--ease);
+/* A link-shaped thing that is not a link. Same paint as .project-link, minus the affordances
+   that would promise a destination: no pointer, no underline-on-hover, not focusable, and
+   dimmed so it does not read as available. */
+.project-link--unavailable,
+.link-action--unavailable {
+  cursor: default;
+  opacity: 0.6;
+  text-decoration: none;
 }
 
-.toast--out { opacity: 0; transform: translateY(6px); transition: opacity var(--t-base) var(--ease), transform var(--t-base) var(--ease); }
-.toast__icon { flex: none; color: var(--purple); }
-.toast--warn .toast__icon { color: var(--orange); }
-
-@keyframes toast-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+.project-link--unavailable:hover,
+.link-action--unavailable:hover {
+  color: inherit;
+  text-decoration: none;
+  transform: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -1366,6 +1396,7 @@ a.channel__value:hover { color: var(--purple); }
   .filter { width: 100%; overflow-x: auto; scrollbar-width: none; }
   .filter::-webkit-scrollbar { display: none; }
 
+  /* Drawer: hidden by default, revealed by the checkbox. No JS, no class swapping. */
   .site-nav {
     position: fixed;
     inset: var(--header-h) 0 auto 0;
@@ -1381,7 +1412,7 @@ a.channel__value:hover { color: var(--purple); }
                 visibility var(--t-base) var(--ease);
   }
 
-  .site-nav.is-open { opacity: 1; visibility: visible; transform: translateY(0); }
+  #nav-toggle:checked ~ .site-nav { opacity: 1; visibility: visible; transform: translateY(0); }
 
   .site-nav__list {
     flex-direction: column;
@@ -1395,6 +1426,15 @@ a.channel__value:hover { color: var(--purple); }
 
   .nav-toggle { display: inline-flex; }
   .site-header__actions .btn--sm { padding: 0 13px; }
+
+  /* Tap-outside target, only while the drawer is open. */
+  #nav-toggle:checked ~ .nav-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 34;
+    background: transparent;
+  }
 
   .projects { grid-template-columns: minmax(0, 1fr); }
   .expertise__grid { grid-template-columns: minmax(0, 1fr); }
