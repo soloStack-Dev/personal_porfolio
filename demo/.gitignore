@@ -5,8 +5,11 @@ target/
 !**/src/test/**/target/
 
 # Local Docker/Spring configuration. `.env` holds the SMTP password, so it stays
-# untracked; `.env.example` is the committed template.
+# untracked; `.env.example` is the committed template. The wildcard catches editor and
+# tooling backups such as `.env.bak`, which would otherwise leak the secret in a commit.
+# No leading spaces: gitignore treats indentation as part of the filename.
 .env
+.env.*
 !.env.example
 
 ### Docker ###

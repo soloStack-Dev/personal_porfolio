@@ -13,7 +13,7 @@ Use the wrapper, not a system `mvn`:
 
 ```powershell
 .\mvnw.cmd spring-boot:run      # dev server, http://localhost:8080 (devtools live-reloads on classpath change)
-.\mvnw.cmd test                 # 27 tests: PortfolioPageTests (21) + ContactMailConfigurationTests (5) + DemoApplicationTests (1)
+.\mvnw.cmd test                 # 34 tests: PortfolioPageTests (24) + ContactMailFailurePageTests (3) + ContactMailConfigurationTests (6) + DemoApplicationTests (1)
 .\mvnw.cmd test -Dtest=PortfolioPageTests
 .\mvnw.cmd package              # produces the runnable jar in target/
 ```
@@ -54,16 +54,27 @@ docker compose down
   sending. SMTP settings are passed through via `env_file: .env` (`required: false`), so absent is
   the only unset value. Copy `.env.example` to `.env` to enable real delivery; `.env` is gitignored.
   Quote any password containing `#` or spaces, or dotenv eats the rest of the line as a comment.
-- **`spring.mail` has exactly eleven properties, and an unknown one is silently ignored.** Read
-  from `spring-boot-mail`'s `spring-configuration-metadata.json`: `default-encoding`, `host`,
-  `jndi-name`, `password`, `port`, `properties`, `protocol`, `ssl.bundle`, `ssl.enabled`,
-  `test-connection`, `username`. There is **no** `spring.mail.starttls` and **no**
-  `spring.mail.smtp.auth`. Both are traps: no error, no warning, no startup failure, the key is
-  just dropped and the send fails later against a live relay. Auth and STARTTLS are the dotted map
-  keys `spring.mail.properties.mail.smtp.auth` / `...starttls.enable`, which live in
-  `application.properties` because an environment variable cannot express a dotted map key —
-  `SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH` does not bind. `ContactMailConfigurationTests` asserts
-  all of this against the assembled `JavaMailSenderImpl`, so do not delete it to "simplify".
+- **`.env` is read by both run modes, so configure it once.** Docker picks it up through
+  `env_file`, but `mvnw spring-boot:run` originally did not read it at all, so a local run had no
+  mail config and the only symptom was the `[contact] SMTP not configured` log. The fix is
+  `spring.config.import=optional:file:.env[.properties]` in `application.properties`; the
+  `[.properties]` hint tells Spring to parse it as a properties file, and dotenv's `KEY=VALUE` is
+  valid properties syntax. `optional:` keeps a missing `.env` harmless, and OS environment
+  variables still win so Docker's `env_file` keeps precedence. Note that `ApplicationContextRunner`
+  never runs `ConfigDataEnvironmentPostProcessor`, so this import **cannot** be covered by
+  `ContactMailConfigurationTests`; that class asserts the declaration survives instead, and the
+  import itself is verified against a running app.
+- **Do not quote the password in `.env`.** A quoted value works for docker compose but Spring's
+  properties loader keeps the quote characters as part of the password. An unquoted value is safe
+  in both because `#` only starts a comment at the beginning of a line, so a password containing
+  `#` survives intact. `ContactMailConfigurationTests` round-trips exactly such a password.
+- **Gmail needs an App Password, not the account password, and no client ID or secret.** Google
+  removed "less secure app" access in 2022, so a normal account password is rejected outright.
+  Client ID/secret are OAuth2 credentials and are not involved in sending as yourself; the config
+  is `smtp.gmail.com`, port `587`, `spring.mail.username` as the full address, and the 16-letter
+  App Password in `SPRING_MAIL_PASSWORD`. `APP_CONTACT_FROM` must equal the authenticated address
+  or an alias on it, or Gmail rejects the send with `550 The specified from address does not match
+  a permitted sender`.
 
 **Host port 8080 is not available on this machine.** The other project's `meminfo-rag-app`
 container has host port 8080 *reserved but unbound* — it was started while the local

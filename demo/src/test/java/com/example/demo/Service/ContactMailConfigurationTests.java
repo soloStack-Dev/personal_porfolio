@@ -5,6 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.example.demo.Model.ContactDelivery;
 import com.example.demo.Model.ContactForm;
 import com.example.demo.Model.ContactProperties;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -32,6 +35,18 @@ class ContactMailConfigurationTests {
         form.setTopic("Job Opportunity");
         form.setMessage("We would like to talk about a backend role.");
         return form;
+    }
+
+    /**
+     * Reads a file from the module directory, so a test can assert on a checked-in config
+     * resource rather than on a property the Environment may have already resolved away.
+     */
+    private static String readRepoFile(String relativePath) {
+        try {
+            return Files.readString(Path.of(relativePath), StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new IllegalStateException("cannot read " + relativePath, e);
+        }
     }
 
     /** Minimal context: only the mail autoconfiguration under test, not the whole web app. */
@@ -119,5 +134,22 @@ class ContactMailConfigurationTests {
                         "spring.mail.port=1",
                         "spring.mail.test-connection=true")
                 .run(context -> assertThat(context).hasFailed());
+    }
+
+    @Test
+    void applicationPropertiesImportsTheEnvFileSoTheFixCannotBeUndone() {
+        // The declaration itself, read from the file, so it cannot be deleted by someone who
+        // only ever runs Docker and sees .env keep working there.
+        //
+        // Only the declaration is asserted here, not the resulting sender. Binding an imported
+        // file cannot be covered by this class: ApplicationContextRunner builds a plain
+        // AnnotationConfigApplicationContext and never runs ConfigDataEnvironmentPostProcessor,
+        // so spring.config.import is silently ignored and there is no sender to inspect. The
+        // import is therefore verified against a running app instead, and the credential path it
+        // feeds is covered by aConfiguredRelayProducesASenderWithTheExpectedCredentials above.
+        String applicationProperties = readRepoFile("src/main/resources/application.properties");
+
+        assertThat(applicationProperties)
+                .contains("spring.config.import=optional:file:.env[.properties]");
     }
 }
